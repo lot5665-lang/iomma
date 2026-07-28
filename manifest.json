@@ -8,12 +8,12 @@
   "theme_color": "#03C75A",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/lot5665-lang/iomma/main/icon-192.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://raw.githubusercontent.com/lot5665-lang/iomma/main/icon-512.png",
+      "src": "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
       "sizes": "512x512",
       "type": "image/png"
     }
