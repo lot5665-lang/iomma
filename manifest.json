@@ -1,0 +1,16 @@
+{
+  "name": "이오마 - 엄마의 사랑이 담긴 스마트 냉장고",
+  "short_name": "이오마",
+  "description": "엄마의 사랑이 담긴 스마트 냉장고 관리 시스템",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F9ECE5",
+  "theme_color": "#03C75A",
+  "icons": [
+    {
+      "src": "https://images.unsplash.com/photo-1584992236310-6edddc08acff?q=80&w=500&auto=format&fit=crop",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
