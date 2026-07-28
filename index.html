@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="iomma">
+    <meta name="theme-color" content="#F9ECE5">
+    <title>iomma - 글로벌 스마트 냉장고 & FUDI 메모리</title>
+
+    <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1584992236310-6edddc08acff?q=80&w=500&auto=format&fit=crop">
+    <link rel="icon" href="https://images.unsplash.com/photo-1584992236310-6edddc08acff?q=80&w=500&auto=format&fit=crop">
+
+    <link rel="manifest" id="pwa-manifest">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { word-wrap: break-word !important; overflow-wrap: break-word !important; word-break: keep-all !important; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; user-select: none; }
+        .naver-green-bg { background-color: #03C75A !important; }
+        .naver-green-text { color: #03C75A !important; }
+        
+        .tab-btn { background-color: #F7F9FA !important; color: #50555C !important; border: 1.5px solid #CBD5E1 !important; }
+        .tab-btn.active-freezer { background-color: #3B82F6 !important; color: #FFFFFF !important; border-color: #3B82F6 !important; font-weight: 800; }
+        .tab-btn.active-fridge { background-color: #06B6D4 !important; color: #FFFFFF !important; border-color: #06B6D4 !important; font-weight: 800; }
+        .tab-btn.active-vegetable { background-color: #F472B6 !important; color: #FFFFFF !important; border-color: #F472B6 !important; font-weight: 800; }
+        .tab-btn.active-beverage { background-color: #8B5CF6 !important; color: #FFFFFF !important; border-color: #8B5CF6 !important; font-weight: 800; }
+        .tab-all.active-all { background-color: #03C75A !important; color: #FFFFFF !important; border-color: #03C75A !important; font-weight: 800; }
+
+        .btn-freezer { background-color: #3B82F6 !important; color: white !important; }
+        .btn-fridge { background-color: #06B6D4 !important; color: white !important; }
+        .btn-vegetable { background-color: #F472B6 !important; color: white !important; }
+        .btn-beverage { background-color: #8B5CF6 !important; color: white !important; }
+
+        .fade-out { opacity: 0; pointer-events: none; transition: opacity 0.5s ease-out; }
+        
+        .pink-fridge-body {
+            background: linear-gradient(135deg, #FADCD2 0%, #EFC0B3 100%);
+            border-radius: 40px;
+            box-shadow: inset -4px -4px 10px rgba(0,0,0,0.1), inset 4px 4px 10px rgba(255,255,255,0.8), 0 15px 35px rgba(217, 119, 87, 0.25);
+            border: 2px solid #F5CCC0;
+        }
+        .fridge-handle {
+            background: linear-gradient(180deg, #FFFFFF 0%, #E2E8F0 50%, #94A3B8 100%);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.9);
+        }
+        .iomma-3d-text {
+            color: #A35741;
+            text-shadow: 1px 1px 0px #FCECE6, -1px -1px 0px #7D3E2F, 2px 2px 3px rgba(0,0,0,0.15);
+        }
+
+        #ui-main-title {
+            font-size: clamp(1.0rem, 4vw, 1.25rem) !important;
+            white-space: normal !important;
+            line-height: 1.3 !important;
+            word-break: keep-all !important;
+        }
+
+        .bg-pastel-freezer { background-color: #EFF6FF !important; border-color: #BFDBFE !important; }
+        .bg-pastel-fridge { background-color: #ECFEFF !important; border-color: #A5F3FC !important; }
+        .bg-pastel-vegetable { background-color: #FDF2F8 !important; border-color: #FBCFE8 !important; }
+        .bg-pastel-beverage { background-color: #F5F3FF !important; border-color: #DDD6FE !important; }
+    </style>
+</head>
+<body id="app-body" class="bg-[#F5F6F8] antialiased flex flex-col min-h-screen text-slate-800 relative select-none">
+
+    <!-- [스플래시 화면] -->
+    <div id="splash-screen" class="fixed inset-0 z-[100] bg-[#F9ECE5] flex flex-col items-center justify-between p-6 max-w-md mx-auto w-full transition-all duration-500 shadow-2xl">
+        <div class="text-center pt-4">
+            <span class="bg-white/80 text-[#D97757] border border-[#F1C4B3] text-[10px] font-bold px-3.5 py-1 rounded-full uppercase tracking-widest shadow-xs">
+                Mom's Warm Kitchen System
+            </span>
+            <h1 class="text-3xl font-black text-slate-900 mt-2.5 tracking-tight">iomma <span class="text-xs text-[#D97757] font-bold">for FUDI ✨</span></h1>
+            <p id="ui-splash-subtitle" class="text-xs text-slate-600 font-semibold mt-1">엄마의 따뜻한 사랑이 담긴 스마트 냉장고</p>
+        </div>
+
+        <div onclick="enterApp()" class="relative my-auto w-full max-w-[240px] flex justify-center py-4 cursor-pointer transform active:scale-95 transition duration-200">
+            <div class="pink-fridge-body w-full aspect-[1/2] p-5 flex flex-col justify-between relative overflow-hidden">
+                <div class="w-full h-[32%] border-b-2 border-[#D8A89A]/40 relative flex flex-col items-center justify-center">
+                    <div class="iomma-3d-text font-black text-2xl tracking-tighter mb-2">iomma.</div>
+                    <div class="fridge-handle w-16 h-3 rounded-full absolute bottom-2 left-4"></div>
+                </div>
+
+                <div class="w-full h-[65%] relative flex flex-col justify-between pt-4">
+                    <div class="fridge-handle w-16 h-3 rounded-full absolute top-2 left-4"></div>
+                    <div class="mt-auto mb-2 flex justify-center">
+                        <div class="w-9 h-9 rounded-full border-2 border-[#A35741]/40 flex items-center justify-center bg-white/30 backdrop-blur-2xs shadow-xs">
+                            <span class="text-sm">🤱</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-xs px-2 py-0.5 rounded-lg shadow-xs border border-amber-100 flex items-center gap-1">
+                    <span class="text-[9px]">🌸</span>
+                    <span class="text-[9px] font-extrabold text-amber-800">FUDI Family</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full pb-6 text-center space-y-2">
+            <p id="ui-splash-touch-guide" class="text-xs text-[#D97757] font-bold animate-pulse">✨ 냉장고를 터치하면 문이 열려요 ✨</p>
+            <p class="text-[11px] text-slate-500 font-medium">Copyright 2026. 이옥태 All rights reserved.</p>
+        </div>
+    </div>
+
+    <!-- 글로벌 헤더 -->
+    <header class="bg-white text-slate-800 py-3 border-b border-slate-300 shadow-xs sticky top-0 z-50 flex justify-between items-center px-4 max-w-md mx-auto w-full">
+        <h1 onclick="openBrandStoryModal()" class="text-lg font-black tracking-tight text-slate-900 flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition" title="브랜드 스토리 보기">
+            <span class="naver-green-text font-extrabold text-xl">iomma</span>
+            <span class="text-xs font-semibold text-slate-400">for FUDI ✨</span>
+        </h1>
+        <div class="flex items-center gap-1">
+            <span class="text-xs">🌐</span>
+            <select id="lang-select" onchange="changeLanguage(this.value)" class="text-xs bg-slate-100 font-bold px-2 py-1 rounded-xl border border-slate-300 focus:outline-none text-slate-700">
+                <option value="KR">🇰🇷 한국어</option>
+                <option value="EN">🇺🇸 English</option>
+                <option value="ES">🇪🇸 Español</option>
+                <option value="ZH">🇨🇳 中文</option>
+                <option value="TH">🇹🇭 ไทย</option>
+                <option value="AR">🇦🇪 العربية</option>
+                <option value="FR">🇫🇷 Français</option>
+                <option value="JP">🇯🇵 日本語</option>
+                <option value="HI">🇮🇳 हिन्दी</option>
+                <option value="DE">🇩🇪 Deutsch</option>
+                <option value="RU">🇷🇺 Русский</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="flex-grow pb-12">
+        <div class="max-w-md mx-auto mt-3 px-4">
+            <div class="bg-white p-5 rounded-3xl shadow-xs border-2 border-slate-300 flex flex-col justify-center gap-4">
+                <div class="flex flex-col items-center text-center py-2">
+                    <span id="ui-system-tag" class="bg-emerald-50 text-emerald-700 border border-emerald-300 text-[10px] font-bold px-3.5 py-1 rounded-full uppercase tracking-wider inline-block mb-3">Mom's Warm Kitchen System</span>
+                    <h2 id="ui-main-title" class="text-slate-900 text-xl font-black leading-snug tracking-tight text-center w-full">
+                        엄마 마음의 냉장고 관리 시스템
+                    </h2>
+                </div>
+                <div class="flex flex-col gap-1.5 bg-[#F8F9FA] p-2 rounded-2xl border border-slate-200">
+                    <div class="flex gap-1.5">
+                        <button onclick="switchSection('freezer')" id="tab-freezer" class="tab-btn flex-1 py-2 text-xs rounded-xl transition duration-150">냉동실</button>
+                        <button onclick="switchSection('fridge')" id="tab-fridge" class="tab-btn flex-1 py-2 text-xs rounded-xl transition duration-150">냉장실</button>
+                        <button onclick="switchSection('vegetable')" id="tab-vegetable" class="tab-btn flex-1 py-2 text-xs rounded-xl transition duration-150">야채칸</button>
+                        <button onclick="switchSection('beverage')" id="tab-beverage" class="tab-btn flex-1 py-2 text-xs rounded-xl transition duration-150">음료/양념</button>
+                    </div>
+                    <button onclick="switchSection('all')" id="tab-all" class="tab-all tab-btn w-full py-2.5 text-xs rounded-xl border transition duration-150 font-extrabold">
+                        👑 냉장고 속 전체보기
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상황판 -->
+        <section class="max-w-md mx-auto mt-2.5 px-4">
+            <div class="bg-white p-2.5 rounded-2xl shadow-xs border-2 border-slate-300 grid grid-cols-4 gap-2 text-center">
+                <button onclick="switchSection('freezer')" id="count-box-freezer" class="py-2 px-1 rounded-xl border border-blue-200 transition text-center bg-blue-50/70 flex flex-col items-center justify-center">
+                    <div id="ui-count-label-freezer" class="text-[10px] font-bold text-blue-600">❄️ 냉동실</div>
+                    <div id="count-freezer" class="text-xs font-black text-blue-900 mt-0.5">0개</div>
+                </button>
+                <button onclick="switchSection('fridge')" id="count-box-fridge" class="py-2 px-1 rounded-xl border border-cyan-200 transition text-center bg-cyan-50/70 flex flex-col items-center justify-center">
+                    <div id="ui-count-label-fridge" class="text-[10px] font-bold text-cyan-700">💧 냉장실</div>
+                    <div id="count-fridge" class="text-xs font-black text-cyan-900 mt-0.5">0개</div>
+                </button>
+                <button onclick="switchSection('vegetable')" id="count-box-vegetable" class="py-2 px-1 rounded-xl border border-pink-200 transition text-center bg-pink-50/70 flex flex-col items-center justify-center">
+                    <div id="ui-count-label-vegetable" class="text-[10px] font-bold text-pink-600">🌿 야채칸</div>
+                    <div id="count-vegetable" class="text-xs font-black text-pink-900 mt-0.5">0개</div>
+                </button>
+                <button onclick="switchSection('beverage')" id="count-box-beverage" class="py-2 px-1 rounded-xl border border-purple-200 transition text-center bg-purple-50/70 flex flex-col items-center justify-center">
+                    <div id="ui-count-label-beverage" class="text-[10px] font-bold text-purple-700">🥤 음료양념</div>
+                    <div id="count-beverage" class="text-xs font-black text-purple-900 mt-0.5">0개</div>
+                </button>
+            </div>
+        </section>
+
+        <!-- 식재료 입력 토글 버튼 및 등록 폼 -->
+        <section class="max-w-md mx-auto mt-2.5 px-4">
+            <button id="toggle-input-btn" onclick="toggleInputForm()" class="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-900 rounded-2xl shadow-xs border-2 border-slate-300 text-xs font-black flex items-center justify-center gap-2 transition">
+                <span class="text-emerald-600 text-base">➕</span> <span id="ui-toggle-btn-text">식재료 입력하기</span>
+            </button>
+
+            <div id="input-container" class="bg-white p-4 rounded-2xl shadow-xs border-2 border-slate-300 mt-2 hidden transition duration-200">
+                <div class="flex justify-between items-center mb-2.5">
+                    <h3 class="text-xs font-bold text-slate-700 flex items-center gap-1">➕ <span id="input-target-title" class="font-extrabold text-emerald-700">냉장실</span> <span id="ui-input-header">새로운 등록</span></h3>
+                    <button onclick="openPreInputMemoryNote()" id="ui-btn-pre-memo" class="text-[10px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-lg transition">
+                        🕒 past note
+                    </button>
+                </div>
+
+                <div class="space-y-2.5">
+                    <div class="flex gap-1.5 items-center">
+                        <input type="text" id="new-food-name" placeholder="식재료 명칭 (예: 삼겹살, 복숭아)" class="input-styled flex-1 px-3 py-2 border border-slate-300 rounded-xl text-xs focus:outline-none bg-slate-50 text-slate-900 font-medium transition">
+                        <select id="new-sub-location" class="input-styled w-28 px-2 py-2 border border-slate-300 rounded-xl text-xs bg-slate-50 text-slate-800 font-bold focus:outline-none transition">
+                        </select>
+                        <button onclick="openShelfConfigModal()" id="btn-shelf-config" class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 transition whitespace-nowrap">
+                            ⚙️ 칸 설정
+                        </button>
+                    </div>
+                    <div class="flex space-x-2">
+                        <div class="w-1/2">
+                            <label id="ui-label-start" class="block text-[10px] text-slate-500 font-bold mb-0.5">보관 시작일</label>
+                            <input type="date" id="new-input-date" value="2026-07-27" class="input-styled w-full px-2 py-1.5 border border-slate-300 rounded-xl text-xs bg-slate-50 text-slate-800 font-bold transition">
+                        </div>
+                        <div class="w-1/2">
+                            <label id="ui-label-expiry" class="block text-[10px] text-slate-500 font-bold mb-0.5">유통기한 마감일</label>
+                            <input type="date" id="new-expiry-date" value="2026-08-03" class="input-styled w-full px-2 py-1.5 border border-slate-300 rounded-xl text-xs bg-slate-50 text-slate-800 font-bold transition">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label id="ui-label-direct-memo" class="block text-[10px] text-emerald-800 font-bold mb-1">✍️ 이 음식의 추억 / 레시피 메모</label>
+                        <textarea id="new-food-direct-note" rows="2" placeholder="음식에 담긴 소중한 추억이나 나만의 레시피를 자유롭게 적어보세요..." class="input-styled w-full p-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none text-slate-900 font-medium leading-relaxed transition"></textarea>
+                    </div>
+
+                    <button onclick="addFoodItem()" id="input-submit-btn" class="w-full py-2.5 text-xs font-black rounded-xl transition shadow-xs naver-green-bg text-white">식재료 투입</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 필터 영역 -->
+        <section class="max-w-md mx-auto mt-2.5 px-4 space-y-2">
+            <div class="bg-white p-2.5 rounded-2xl shadow-xs border-2 border-slate-300">
+                <div class="flex gap-2 items-center justify-between">
+                    <select id="filter-type-select" onchange="renderFoodList()" class="text-xs bg-slate-100 font-bold px-2 py-2 rounded-xl border border-slate-300 text-slate-700">
+                        <option value="input" id="opt-filter-input">📅 투입일 조회</option>
+                        <option value="expiry" id="opt-filter-expiry">⏳ 마감일 조회</option>
+                    </select>
+                    
+                    <div id="filter-date-wrapper" class="flex items-center space-x-1.5 flex-1 p-2 rounded-xl border border-slate-300 bg-slate-50 transition duration-200 relative cursor-pointer" onclick="document.getElementById('filter-input-date').showPicker ? document.getElementById('filter-input-date').showPicker() : document.getElementById('filter-input-date').focus();">
+                        <div class="relative flex-1 flex items-center justify-center">
+                            <input type="date" id="filter-input-date" onchange="onDateChecked()" class="absolute opacity-0 inset-0 w-full h-full cursor-pointer z-20">
+                            <span id="filter-date-custom-text" class="text-xs text-slate-800 font-bold pointer-events-none z-10 pl-1">
+                                YYYY-MM-DD
+                            </span>
+                        </div>
+                    </div>
+                    <button onclick="clearDateFilter()" id="clear-date-btn" class="text-xs py-2 px-3 rounded-xl font-bold transition whitespace-nowrap bg-slate-100 text-slate-700 border border-slate-300">
+                        전체날짜
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <main class="max-w-md mx-auto mt-2.5 px-4">
+            <div id="main-list-card" class="bg-white rounded-2xl shadow-xs p-4 border-2 border-slate-300 transition-all duration-300">
+                <h2 id="section-title" class="text-xs font-black text-slate-900 mb-3 border-b border-slate-200 pb-2 flex justify-between items-center flex-wrap gap-1">
+                    <div class="flex items-center gap-1.5">
+                        <span id="ui-section-main-heading">👑 냉장고 속 전체보기 (4개)</span>
+                        <span id="ui-memo-guide-badge" class="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">[식품체크 메모가 보입니다]</span>
+                    </div>
+                    <span id="date-filter-indicator" class="text-xs text-amber-600 font-bold"></span>
+                </h2>
+                <div id="food-list" class="space-y-2"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 보관 칸 관리 모달 -->
+    <div id="shelf-config-modal" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center p-4 z-50 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border-2 border-slate-300 space-y-4">
+            <h3 class="text-sm font-black text-slate-900 border-b pb-2 flex justify-between items-center">
+                <span>⚙️ <span id="shelf-modal-sec-title" class="naver-green-text">냉동실</span> <span id="ui-shelf-modal-head">칸 커스텀 설정</span></span>
+            </h3>
+
+            <div class="flex gap-2">
+                <input type="text" id="new-shelf-name-input" placeholder="새로운 칸 이름 (예: 파칸, 한약칸)" class="flex-1 px-3 py-2 border border-slate-300 rounded-xl text-xs bg-slate-50 focus:outline-none font-bold">
+                <button onclick="addNewShelf()" id="ui-btn-add-shelf" class="px-3 py-2 naver-green-bg text-white font-extrabold text-xs rounded-xl transition shadow-xs whitespace-nowrap">
+                    ➕ 추가
+                </button>
+            </div>
+
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 max-h-52 overflow-y-auto space-y-2">
+                <p id="ui-shelf-list-label" class="text-[10px] font-bold text-slate-500 mb-1">현재 설정된 칸 목록:</p>
+                <div id="shelf-list-container" class="space-y-1.5"></div>
+            </div>
+
+            <div class="flex gap-2 pt-1">
+                <button onclick="resetShelfToDefault()" id="ui-btn-reset-shelf" class="text-rose-600 hover:bg-rose-50 border border-rose-200 py-2.5 px-3 rounded-xl font-bold text-xs transition">
+                    🔄 초기화
+                </button>
+                <button onclick="closeShelfConfigModal()" id="ui-btn-close-shelf" class="flex-1 naver-green-bg text-white py-2.5 rounded-xl font-bold text-xs transition shadow-xs">
+                    완료
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 브랜드 스토리 모달 -->
+    <div id="brand-story-modal" class="fixed inset-0 bg-slate-900/40 hidden items-center justify-center p-4 z-50 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-2 border-slate-300 text-center space-y-4">
+            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-xl font-black">🌸</div>
+            <h3 id="story-modal-title" class="text-base font-black text-slate-900">iomma & FUDI Story</h3>
+            <div id="story-modal-desc" class="text-xs text-slate-700 leading-relaxed space-y-2.5 text-left bg-slate-50 p-3.5 rounded-2xl border border-slate-200 font-medium"></div>
+            <button onclick="closeBrandStoryModal()" id="story-modal-btn" class="w-full py-2.5 text-xs font-black rounded-xl transition shadow-xs naver-green-bg text-white">따뜻한 이야기 닫기</button>
+        </div>
+    </div>
+
+    <!-- 날짜 수정 모달 -->
+    <div id="edit-date-modal" class="fixed inset-0 bg-slate-900/30 hidden items-center justify-center p-4 z-50 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-xl border-2 border-slate-300">
+            <h3 class="text-sm font-black mb-4 text-slate-900 border-b pb-2 flex items-center gap-1.5 text-emerald-600">
+                📅 <span id="edit-food-name-title" class="text-slate-800">식재료</span> <span id="ui-edit-modal-title">날짜 및 위치 수정</span>
+            </h3>
+            <input type="hidden" id="edit-target-section">
+            <input type="hidden" id="edit-target-index">
+            <div class="space-y-3">
+                <div>
+                    <label id="ui-edit-lbl-loc" class="block text-xs text-slate-600 font-bold mb-1">📌 세부 보관 위치 변경</label>
+                    <select id="edit-sub-location" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-slate-50 font-bold text-slate-800 focus:outline-none"></select>
+                </div>
+                <div>
+                    <label id="ui-edit-lbl-start" class="block text-xs text-slate-600 font-bold mb-1">📅 보관 시작일 변경</label>
+                    <input type="date" id="edit-input-date" class="w-full px-2.5 py-2 border border-slate-300 rounded-xl text-xs bg-slate-50 font-bold text-slate-800 focus:outline-none">
+                </div>
+                <div>
+                    <label id="ui-edit-lbl-expiry" class="block text-xs text-slate-600 font-bold mb-1">⏳ 유통기한 마감일 변경</label>
+                    <input type="date" id="edit-expiry-date" class="w-full px-2.5 py-2 border border-slate-300 rounded-xl text-xs bg-slate-50 font-bold text-slate-800 focus:outline-none">
+                </div>
+            </div>
+            <div class="flex gap-2 mt-5">
+                <button onclick="closeEditModal()" id="ui-edit-btn-cancel" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs transition">취소</button>
+                <button onclick="saveDateChanges()" id="ui-edit-btn-save" class="flex-1 naver-green-bg hover:opacity-90 text-white py-2.5 rounded-xl font-bold text-xs transition shadow-xs">변경사항 저장</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 메모장 모달 -->
+    <div id="memory-modal" class="fixed inset-0 bg-slate-900/30 hidden items-center justify-center p-4 z-50 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-xl border-2 border-slate-300 max-h-[85vh] overflow-y-auto">
+            <h3 id="memory-modal-title" class="text-sm font-black mb-3 text-slate-900 border-b pb-2 flex items-center">📜 추억의 메모</h3>
+            <input type="hidden" id="memory-target-section">
+            <input type="hidden" id="memory-target-index">
+            <input type="hidden" id="memory-target-name">
+            <div class="space-y-3">
+                <div class="bg-emerald-50/70 p-3 rounded-2xl border border-emerald-200">
+                    <h4 id="ui-memo-past-header" class="text-xs font-black text-emerald-900 mb-2">🕒 past note</h4>
+                    <div id="past-memory-display" class="space-y-2 text-slate-800 text-[11px] leading-relaxed max-h-64 overflow-y-auto"></div>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-4">
+                <button onclick="closeMemoryModal()" id="ui-memo-btn-close" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-2.5 rounded-xl font-bold text-xs transition">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white text-slate-500 text-center py-6 text-[11px] font-medium mt-auto border-t border-slate-300 max-w-md mx-auto w-full">
+        <p class="font-bold text-slate-700 text-xs">🌸 iomma Smart Kitchen System</p>
+        <p class="mt-1 text-slate-500 font-medium text-[11px]">Copyright 2026. 이옥태 All rights reserved.</p>
+    </footer>
+
+    <script>
+        function enterApp() {
+            const splash = document.getElementById('splash-screen');
+            splash.classList.add('fade-out');
+            setTimeout(() => { splash.style.display = 'none'; }, 500);
+        }
+
+        const langMap = { KR: "ko", EN: "en", ES: "es", ZH: "zh", TH: "th", AR: "ar", FR: "fr", JP: "ja", HI: "hi", DE: "de", RU: "ru" };
+
+        const i18n = {
+            KR: {
+                systemTag: "Mom's Warm Kitchen System", mainTitle: "엄마 마음의 냉장고 관리 시스템",
+                splashSubtitle: "엄마의 따뜻한 사랑이 담긴 스마트 냉장고", splashTouchGuide: "✨ 냉장고를 터치하면 문이 열려요 ✨",
+                freezer: "냉동실", fridge: "냉장실", vegetable: "야채칸", beverage: "음료/양념", all: "냉장고 속 전체보기",
+                countUnit: "개", newReg: "새로운 등록", placeholderFood: "식재료 명칭 (예: 삼겹살, 복숭아)",
+                startDate: "보관 시작일", expiryDate: "유통기한 마감일", submitBtn: "식재료 투입",
+                showAllDate: "전체날짜", allLoc: "전체 위치", topShelf: "상칸", midShelf: "중칸", botShelf: "하칸", deleteBtn: "비우기",
+                memoTitle: "추억의 메모", singleDeleteBtn: "삭제", singleEditBtn: "수정", closeBtn: "닫기",
+                noPastMemory: "아직 저장된 과거 기록이 없습니다.", editModalTitle: "날짜 및 위치 수정",
+                editLocLbl: "📌 세부 보관 위치 변경", editStartLbl: "📅 보관 시작일 변경", editExpiryLbl: "⏳ 유통기한 마감일 변경",
+                cancelBtn: "취소", saveChangesBtn: "변경사항 저장", dateHint: "YYYY-MM-DD", toggleInputBtn: "식재료 입력하기",
+                memoGuide: "[식품체크 메모가 보입니다]", newRegHeader: "새로운 등록", directMemoLbl: "✍️ 이 음식의 추억 / 레시피 메모",
+                placeholderDirectMemo: "음식에 담긴 소중한 추억이나 나만의 레시피를 자유롭게 적어보세요...",
+                storyTitle: "iomma & FUDI 스토리",
+                storyContent1: "<b>iomma (아이엄마)</b>는 한국어로 자식을 위해 따뜻한 밥상과 냉장고를 채워주시는 세상 모든 어머니의 마음을 뜻합니다.",
+                storyContent2: "<b>FUDI (푸디)</b>는 이 앱을 사용하는 당신, 그리고 엄마의 사랑 속에서 자라난 소중한 자녀들입니다.",
+                storyContent3: "✨ \"우리는 모두 다 같은 엄마의 품에서 자란 FUDI Family 입니다.\"",
+                storyClose: "따뜻한 이야기 닫기", secTagFreezer: "냉동", secTagFridge: "냉장", secTagVegetable: "야채", secTagBeverage: "음료",
+                filterInputOpt: "📅 투입일 조회", filterExpiryOpt: "⏳ 마감일 조회", dateStartBadge: "시작", dateExpiryBadge: "마감",
+                shelfBtn: "⚙️ 칸 설정", shelfModalHead: "칸 커스텀 설정", shelfAddBtn: "➕ 추가", shelfResetBtn: "🔄 초기화", shelfCloseBtn: "완료",
+                shelfPlaceholder: "새로운 칸 이름 (예: 파칸, 한약칸)", shelfListLabel: "현재 설정된 칸 목록:",
+                pastNoteHeader: "🕒 past note (누적된 과거 추억 기록)"
+            },
+            EN: {
+                systemTag: "Mom's Warm Kitchen System", mainTitle: "Mom's Heart Fridge Management System",
+                splashSubtitle: "Smart fridge filled with mother's warm love", splashTouchGuide: "✨ Touch the fridge to open the door ✨",
+                freezer: "Freezer", fridge: "Fridge", vegetable: "Vegetable", beverage: "Drinks/Sauce", all: "View All Items",
+                countUnit: "items", newReg: "Add New Item", placeholderFood: "Item Name (e.g. Milk, Steak)",
+                startDate: "Stored Date", expiryDate: "Expiry Date", submitBtn: "Put in Fridge",
+                showAllDate: "All Dates", allLoc: "All Spots", topShelf: "Top Shelf", midShelf: "Mid Shelf", botShelf: "Bot Shelf", deleteBtn: "Empty",
+                memoTitle: "Memory Note", singleDeleteBtn: "Delete", singleEditBtn: "Edit", closeBtn: "Close",
+                noPastMemory: "No past memory logs recorded yet.", editModalTitle: "Edit Date & Location",
+                editLocLbl: "📌 Change Detail Spot", editStartLbl: "📅 Change Stored Date", editExpiryLbl: "⏳ Change Expiry Date",
+                cancelBtn: "Cancel", saveChangesBtn: "Save Changes", dateHint: "YYYY-MM-DD", toggleInputBtn: "Add Food Item",
+                memoGuide: "[Food check memo is visible]", newRegHeader: "Add New Item", directMemoLbl: "✍️ Memory / Recipe Note",
+                placeholderDirectMemo: "Write precious memories or your secret recipe here...",
+                storyTitle: "iomma & FUDI Story",
+                storyContent1: "<b>iomma</b> represents the unconditional heart of all mothers who fill the refrigerator with warmth.",
+                storyContent2: "<b>FUDI</b> refers to you—the user, and the precious children nurtured by a mother's love.",
+                storyContent3: "✨ \"We are all the FUDI Family, raised in the same loving embrace of our mother.\"",
+                storyClose: "Close Story", secTagFreezer: "Freezer", secTagFridge: "Fridge", secTagVegetable: "Veggie", secTagBeverage: "Drink",
+                filterInputOpt: "📅 By Stored Date", filterExpiryOpt: "⏳ By Expiry Date", dateStartBadge: "Start", dateExpiryBadge: "End",
+                shelfBtn: "⚙️ Shelf Setup", shelfModalHead: "Custom Shelf Setup", shelfAddBtn: "➕ Add", shelfResetBtn: "🔄 Reset", shelfCloseBtn: "Done",
+                shelfPlaceholder: "New Shelf Name (e.g. Top Shelf)", shelfListLabel: "Current Shelf List:",
+                pastNoteHeader: "🕒 past note (Accumulated Memory Logs)"
+            },
+            JP: {
+                systemTag: "お母さんの温もりキッチンシステム", mainTitle: "お母さんの心がつまった冷蔵庫管理システム",
+                splashSubtitle: "お母さんの温かい愛が詰まったスマート冷蔵庫", splashTouchGuide: "✨ 冷蔵庫をタッチするとドアが開きます ✨",
+                freezer: "冷凍室", fridge: "冷蔵室", vegetable: "野菜室", beverage: "飲料/調味料", all: "全リストを見る",
+                countUnit: "個", newReg: "新しい食材の追加", placeholderFood: "食材の名前 (例: 牛肉, トマト)",
+                startDate: "保存開始日", expiryDate: "賞味期限", submitBtn: "冷蔵庫に入れる",
+                showAllDate: "全日付", allLoc: "全位置", topShelf: "上段", midShelf: "中段", botShelf: "下段", deleteBtn: "空にする",
+                memoTitle: "思い出のメモ", singleDeleteBtn: "削除", singleEditBtn: "修正", closeBtn: "閉じる",
+                noPastMemory: "まだ保存された過去の記録がありません。", editModalTitle: "日付と位置の修正",
+                editLocLbl: "📌 保管位置の変更", editStartLbl: "📅 保存開始日の変更", editExpiryLbl: "⏳ 賞味期限の変更",
+                cancelBtn: "キャンセル", saveChangesBtn: "変更事項を保存", dateHint: "YYYY-MM-DD", toggleInputBtn: "食材を入力する",
+                memoGuide: "[食品チェックメモが表示されます]", newRegHeader: "新しい登録", directMemoLbl: "✍️ 食材の思い出 / レシピメモ",
+                placeholderDirectMemo: "温かい思い出や秘伝のレシピを自由にお書きください...",
+                storyTitle: "iomma & FUDI ストーリー",
+                storyContent1: "<b>iomma</b>は、子供たちのために温かい食卓と冷蔵庫を満たしてくださるお母さんの心を表します。",
+                storyContent2: "<b>FUDI</b>は、このアプリ使うあなた、そしてお母さんの愛の中で育った大切な子どもたちです。",
+                storyContent3: "✨ 「私たちは皆、同じお母さんの温もりで育った FUDI Family です。」",
+                storyClose: "物語を閉じる", secTagFreezer: "冷凍", secTagFridge: "冷蔵", secTagVegetable: "野菜", secTagBeverage: "飲料",
+                filterInputOpt: "📅 保存日で検索", filterExpiryOpt: "⏳ 賞味期限で検索", dateStartBadge: "開始", dateExpiryBadge: "期限",
+                shelfBtn: "⚙️ 段の設定", shelfModalHead: "段のカスタム設定", shelfAddBtn: "➕ 追加", shelfResetBtn: "🔄 リセット", shelfCloseBtn: "完了",
+                shelfPlaceholder: "新しい段の名前 (例: 上段, ネギ段)", shelfListLabel: "現在の設定リスト:",
+                pastNoteHeader: "🕒 past note (累積された思い出記録)"
+            },
+            AR: {
+                systemTag: "نظام مطبخ أمي الدافئ", mainTitle: "نظام إدارة ثلاجة أمي بحب",
+                splashSubtitle: "ثلاجة ذكية مليئة بحب الأم الدافئ", splashTouchGuide: "✨ المس الثلاجة لفتح الباب ✨",
+                freezer: "المجمد", fridge: "الثلاجة", vegetable: "الخضار", beverage: "المشروبات/الصلصات", all: "عرض كل المحتويات",
+                countUnit: "عنصر", newReg: "إضافة جديد", placeholderFood: "اسم العنصر (مثل حليب، لحم)",
+                startDate: "تاريخ التخزين", expiryDate: "تاريخ انتهاء الصلاحية", submitBtn: "وضع في الثلاجة",
+                showAllDate: "كل التواريخ", allLoc: "كل الأماكن", topShelf: "الرف العلوي", midShelf: "الرف الأوسط", botShelf: "الرف السفلي", deleteBtn: "تفريغ",
+                memoTitle: "ملاحظة الذكريات", singleDeleteBtn: "حذف", singleEditBtn: "تعديل", closeBtn: "إغلاق",
+                noPastMemory: "لا توجد سجلات ذكريات سابقة محفوظة بعد.", editModalTitle: "تعديل التاريخ والموقع",
+                editLocLbl: "📌 تغيير الموقع بالتفصيل", editStartLbl: "📅 تغيير تاريخ التخزين", editExpiryLbl: "⏳ تغيير تاريخ انتهاء الصلاحية",
+                cancelBtn: "إلغاء", saveChangesBtn: "حفظ التغييرات", dateHint: "YYYY-MM-DD", toggleInputBtn: "إضافة عنصر جديد",
+                memoGuide: "[ملاحظة فحص الطعام مرئية]", newRegHeader: "إضافة عنصر جديد", directMemoLbl: "✍️ ملاحظة الذكريات / الوصفة",
+                placeholderDirectMemo: "اكتب ذكرياتك الجميلة أو وصفة الطهي الخاصة بك هنا...",
+                storyTitle: "قصة iomma & FUDI",
+                storyContent1: "<b>iomma</b> تمثل قلب كل أم تملأ الثلاجة بالدفء لأبنائها.",
+                storyContent2: "<b>FUDI</b> هو أنت، المستخدم، والأبناء الأعزاء الذين نشأوا على حب الأم.",
+                storyContent3: "✨ \"نحن جميعاً عائلة FUDI، نشأنا في حضن أم واحدة.\"",
+                storyClose: "إغلاق القصة", secTagFreezer: "تجميد", secTagFridge: "تبريد", secTagVegetable: "خضار", secTagBeverage: "مشروب",
+                filterInputOpt: "📅 حسب تاريخ التخزين", filterExpiryOpt: "⏳ حسب تاريخ الانتهاء", dateStartBadge: "بدء", dateExpiryBadge: "انتهاء",
+                shelfBtn: "⚙️ إعداد الرفوف", shelfModalHead: "إعداد الرفوف المخصص", shelfAddBtn: "➕ إضافة", shelfResetBtn: "🔄 إعادة ضبط", shelfCloseBtn: "تم",
+                shelfPlaceholder: "اسم الرف الجديد", shelfListLabel: "قائمة الرفوف الحالية:",
+                pastNoteHeader: "🕒 past note (سجل الذكريات المتراكمة)"
+            },
+            ES: {
+                systemTag: "Sistema de Cocina Cálida de Mamá", mainTitle: "Sistema de Gestión de Nevera de Mamá",
+                splashSubtitle: "Nevera inteligente llena del cálido amor de mamá", splashTouchGuide: "✨ Toca la nevera para abrir la puerta ✨",
+                freezer: "Congelador", fridge: "Nevera", vegetable: "Verduras", beverage: "Bebidas/Salsas", all: "Ver Todo",
+                countUnit: "uds", newReg: "Añadir Nuevo", placeholderFood: "Nombre (ej. Leche, Carne)",
+                startDate: "Fecha Entrada", expiryDate: "Fecha Caducidad", submitBtn: "Guardar Alimento",
+                showAllDate: "Todas Fechas", allLoc: "Todo", topShelf: "Estante Sup.", midShelf: "Estante Med.", botShelf: "Estante Inf.", deleteBtn: "Vaciar",
+                memoTitle: "Nota de Recuerdo", singleDeleteBtn: "Borrar", singleEditBtn: "Editar", closeBtn: "Cerrar",
+                noPastMemory: "Aún no hay registros de recuerdos pasados.", editModalTitle: "Editar Fecha y Ubicación",
+                editLocLbl: "📌 Cambiar Ubicación", editStartLbl: "📅 Cambiar Fecha Entrada", editExpiryLbl: "⏳ Cambiar Fecha Caducidad",
+                cancelBtn: "Cancelar", saveChangesBtn: "Guardar Cambios", dateHint: "AAAA-MM-DD", toggleInputBtn: "Añadir Alimento",
+                memoGuide: "[Nota de verificación visible]", newRegHeader: "Añadir Nuevo", directMemoLbl: "✍️ Nota de Recuerdo / Receta",
+                placeholderDirectMemo: "Escribe recuerdos o tu receta especial aquí...",
+                storyTitle: "Historia de iomma & FUDI",
+                storyContent1: "<b>iomma</b> representa el amor incondicional de todas las madres que llenan el hogar con calidez.",
+                storyContent2: "<b>FUDI</b> eres tú, el usuario, y los hijos cuidados con amor.",
+                storyContent3: "✨ \"Todos somos la Familia FUDI, criados en el mismo abrazo materno.\"",
+                storyClose: "Cerrar Historia", secTagFreezer: "Congelador", secTagFridge: "Nevera", secTagVegetable: "Verdura", secTagBeverage: "Bebida",
+                filterInputOpt: "📅 Por fecha entrada", filterExpiryOpt: "⏳ Por caducidad", dateStartBadge: "Inicio", dateExpiryBadge: "Fin",
+                shelfBtn: "⚙️ Estantes", shelfModalHead: "Ajuste de Estantes", shelfAddBtn: "➕ Añadir", shelfResetBtn: "🔄 Resetear", shelfCloseBtn: "Hecho",
+                shelfPlaceholder: "Nombre del estante", shelfListLabel: "Estantes actuales:",
+                pastNoteHeader: "🕒 past note (Historial de Recuerdos)"
+            },
+            ZH: {
+                systemTag: "妈妈的温情厨房系统", mainTitle: "包含妈妈心意的冰箱管理系统",
+                splashSubtitle: "充满妈妈温暖关爱的智能冰箱", splashTouchGuide: "✨ 点击冰箱即可打开冰箱门 ✨",
+                freezer: "冷冻室", fridge: "冷藏室", vegetable: "蔬菜格", beverage: "饮料/调料", all: "查看全部",
+                countUnit: "个", newReg: "添加新食材", placeholderFood: "食材名称 (例如: 牛肉, 苹果)",
+                startDate: "存放日期", expiryDate: "保质期至", submitBtn: "放入冰箱",
+                showAllDate: "所有日期", allLoc: "全部位置", topShelf: "上层", midShelf: "中层", botShelf: "下层", deleteBtn: "清空",
+                memoTitle: "回忆备忘录", singleDeleteBtn: "删除", singleEditBtn: "修改", closeBtn: "关闭",
+                noPastMemory: "暂无保存的历史回忆记录。", editModalTitle: "修改日期与位置",
+                editLocLbl: "📌 修改具体存放位置", editStartLbl: "📅 修改存放日期", editExpiryLbl: "⏳ 修改保质期",
+                cancelBtn: "取消", saveChangesBtn: "保存修改", dateHint: "年-月-日", toggleInputBtn: "添加食材",
+                memoGuide: "[食品检查备忘录可见]", newRegHeader: "添加新食材", directMemoLbl: "✍️ 食材回忆 / 独家食谱",
+                placeholderDirectMemo: "在此记录关于这道美食的温情回忆或烹饪食谱...",
+                storyTitle: "iomma & FUDI 品牌故事",
+                storyContent1: "<b>iomma</b> 代表着天下所有母亲为孩子用温情填满冰箱的无私慈爱。",
+                storyContent2: "<b>FUDI</b> 是指身为用户的你，以及在母爱中成长珍贵的孩子们。",
+                storyContent3: "✨ “我们都是 FUDI Family，在同一个母亲的怀抱中长大。”",
+                storyClose: "关闭故事", secTagFreezer: "冷冻", secTagFridge: "冷藏", secTagVegetable: "蔬菜", secTagBeverage: "饮料",
+                filterInputOpt: "📅 按存放日查询", filterExpiryOpt: "⏳ 按到期日查询", dateStartBadge: "存放", dateExpiryBadge: "到期",
+                shelfBtn: "⚙️ 分隔设置", shelfModalHead: "自定义分隔格设置", shelfAddBtn: "➕ 添加", shelfResetBtn: "🔄 重置", shelfCloseBtn: "完成",
+                shelfPlaceholder: "新分隔名称 (例: 上层, 葱格)", shelfListLabel: "当前设置的分隔列表:",
+                pastNoteHeader: "🕒 past note (历史回忆记录)"
+            },
+            TH: {
+                systemTag: "ระบบครัวอบอุ่นของคุณแม่", mainTitle: "ระบบจัดการตู้เย็นด้วยหัวใจของคุณแม่",
+                splashSubtitle: "ตู้เย็นอัจฉริยะที่เต็มไปด้วยความรักอันอบอุ่นของแม่", splashTouchGuide: "✨ แตะที่ตู้เย็นเพื่อเปิดประตู ✨",
+                freezer: "ช่องแช่แข็ง", fridge: "ช่องแช่เย็น", vegetable: "ช่องผัก", beverage: "เครื่องดื่ม/ซอส", all: "ดูทั้งหมด",
+                countUnit: "ชิ้น", newReg: "เพิ่มรายการใหม่", placeholderFood: "ชื่อวัตถุดิบ (เช่น นม, สเต๊ก)",
+                startDate: "วันที่เริ่มเก็บ", expiryDate: "วันหมดอายุ", submitBtn: "ใส่ในตู้เย็น",
+                showAllDate: "ทุกวันที่", allLoc: "ทุกตำแหน่ง", topShelf: "ชั้นบน", midShelf: "ชั้นกลาง", botShelf: "ชั้นล่าง", deleteBtn: "เอาออก",
+                memoTitle: "บันทึกความทรงจำ", singleDeleteBtn: "ลบ", singleEditBtn: "แก้ไข", closeBtn: "ปิด",
+                noPastMemory: "ยังไม่มีประวัติความทรงจำที่บันทึกไว้", editModalTitle: "แก้ไขวันที่และตำแหน่ง",
+                editLocLbl: "📌 เปลี่ยนตำแหน่งจัดเก็บ", editStartLbl: "📅 เปลี่ยนวันที่เริ่มเก็บ", editExpiryLbl: "⏳ เปลี่ยนวันหมดอายุ",
+                cancelBtn: "ยกเลิก", saveChangesBtn: "บันทึกการเปลี่ยนแปลง", dateHint: "ปปปป-ดด-วว", toggleInputBtn: "เพิ่มวัตถุดิบ",
+                memoGuide: "[บันทึกการตรวจสอบอาหารมองเห็นได้]", newRegHeader: "เพิ่มรายการใหม่", directMemoLbl: "✍️ ความทรงจำ / สูตรอาหาร",
+                placeholderDirectMemo: "เขียนความทรงจำแสนอบอุ่นหรือสูตรเด็ดของคุณที่นี่...",
+                storyTitle: "เรื่องราวของ iomma & FUDI",
+                storyContent1: "<b>iomma</b> หมายถึงหัวใจของแม่ทุกคนที่เติมเต็มตู้เย็นด้วยความอบอุ่นเพื่อลูก",
+                storyContent2: "<b>FUDI</b> คือตัวคุณ ผู้ใช้งาน และลูกๆ ที่เติบโตมาในความรักของแม่",
+                storyContent3: "✨ \"พวกเราทุกคนคือ FUDI Family ที่เติบโตจากอ้อมอกแม่คนเดียวกัน\"",
+                storyClose: "ปิดเรื่องราว", secTagFreezer: "แช่แข็ง", secTagFridge: "แช่เย็น", secTagVegetable: "ผัก", secTagBeverage: "เครื่องดื่ม",
+                filterInputOpt: "📅 ค้นหาตามวันที่เก็บ", filterExpiryOpt: "⏳ ค้นหาตามวันหมดอายุ", dateStartBadge: "เริ่ม", dateExpiryBadge: "หมดอายุ",
+                shelfBtn: "⚙️ ตั้งค่าชั้น", shelfModalHead: "กำหนดชั้นวางเอง", shelfAddBtn: "➕ เพิ่ม", shelfResetBtn: "🔄 รีเซ็ต", shelfCloseBtn: "เสร็จสิ้น",
+                shelfPlaceholder: "ชื่อชั้นใหม่", shelfListLabel: "รายการชั้นวางปัจจุบัน:",
+                pastNoteHeader: "🕒 past note (บันทึกความทรงจำที่สะสม)"
+            },
+            FR: {
+                systemTag: "Système de Cuisine Chaleureuse de Maman", mainTitle: "Système de Gestion du Frigo de Maman",
+                splashSubtitle: "Frigo intelligent rempli de l'amour chaleureux de maman", splashTouchGuide: "✨ Touchez le frigo pour ouvrir la porte ✨",
+                freezer: "Congélateur", fridge: "Réfrigérateur", vegetable: "Légumes", beverage: "Boissons/Sauces", all: "Voir Tout",
+                countUnit: "articles", newReg: "Ajouter Un Élément", placeholderFood: "Nom (ex. Lait, Fromage)",
+                startDate: "Date Stockage", expiryDate: "Date Expiration", submitBtn: "Mettre au Frigo",
+                showAllDate: "Toutes Dates", allLoc: "Tous Emplacements", topShelf: "Étagère Sup.", midShelf: "Étagère Med.", botShelf: "Étagère Inf.", deleteBtn: "Vider",
+                memoTitle: "Note de Souvenir", singleDeleteBtn: "Supprimer", singleEditBtn: "Modifier", closeBtn: "Fermer",
+                noPastMemory: "Aucun souvenir enregistré pour le moment.", editModalTitle: "Modifier Date & Emplacement",
+                editLocLbl: "📌 Changer d'emplacement", editStartLbl: "📅 Changer la date de stockage", editExpiryLbl: "⏳ Changer la date d'expiration",
+                cancelBtn: "Annuler", saveChangesBtn: "Enregistrer", dateHint: "AAAA-MM-JJ", toggleInputBtn: "Ajouter un aliment",
+                memoGuide: "[Note de contrôle visible]", newRegHeader: "Ajouter Un Élément", directMemoLbl: "✍️ Note de Souvenir / Recette",
+                placeholderDirectMemo: "Écrivez de précieux souvenirs ou votre recette secrète ici...",
+                storyTitle: "Histoire de iomma & FUDI",
+                storyContent1: "<b>iomma</b> représente le cœur inconditionnel de toutes les mères qui remplissent le foyer de chaleur.",
+                storyContent2: "<b>FUDI</b> désigne vous, l'utilisateur, et les enfants chéris nourris par l'amour maternel.",
+                storyContent3: "✨ \"Nous sommes tous la Famille FUDI, élevés dans la même embrace maternelle.\"",
+                storyClose: "Fermer l'histoire", secTagFreezer: "Congélateur", secTagFridge: "Frigo", secTagVegetable: "Légume", secTagBeverage: "Boisson",
+                filterInputOpt: "📅 Par date stockage", filterExpiryOpt: "⏳ Par date expiration", dateStartBadge: "Début", dateExpiryBadge: "Fin",
+                shelfBtn: "⚙️ Étagères", shelfModalHead: "Réglage des Étagères", shelfAddBtn: "➕ Ajouter", shelfResetBtn: "🔄 Rénitialiser", shelfCloseBtn: "Terminé",
+                shelfPlaceholder: "Nom de la nouvelle étagère", shelfListLabel: "Liste des étagères actuelles:",
+                pastNoteHeader: "🕒 past note (Historique des souvenirs)"
+            },
+            HI: {
+                systemTag: "Mom's Warm Kitchen System", mainTitle: "माँ के दिल का रेफ्रिजरेटर प्रबंधन सिस्टम",
+                splashSubtitle: "माँ के प्यारे दुलार से भरा स्मार्ट फ्रिज", splashTouchGuide: "✨ दरवाजा खोलने के लिए फ्रिज को छुएं ✨",
+                freezer: "फ्रीजर", fridge: "फ्रिज", vegetable: "सब्जी कक्ष", beverage: "पेय/मसाला", all: "सभी देखें",
+                countUnit: "आइटम", newReg: "नया जोड़ें", placeholderFood: "सामग्री का नाम (जैसे: दूध, सेब)",
+                startDate: "भंडारण तिथि", expiryDate: "समाप्ति तिथि", submitBtn: "फ्रिज में रखें",
+                showAllDate: "सभी तिथियां", allLoc: "सभी स्थान", topShelf: "ऊपरी शेल्फ", midShelf: "मध्यम शेल्फ", botShelf: "निचली शेल्फ", deleteBtn: "खाली करें",
+                memoTitle: "स्मृति नोट्स", singleDeleteBtn: "हटाएं", singleEditBtn: "संपादित करें", closeBtn: "बंद करें",
+                noPastMemory: "अभी तक कोई स्मृति नोट दर्ज नहीं किया गया है।", editModalTitle: "तिथि और स्थान संपादित करें",
+                editLocLbl: "📌 स्थान बदलें", editStartLbl: "📅 भंडारण तिथि बदलें", editExpiryLbl: "⏳ समाप्ति तिथि बदलें",
+                cancelBtn: "रद्द करें", saveChangesBtn: "सहेजें", dateHint: "YYYY-MM-DD", toggleInputBtn: "खाद्य सामग्री दर्ज करें",
+                memoGuide: "[खाद्य चेक मेमो दिखाई दे रहा है]", newRegHeader: "नया जोड़ें", directMemoLbl: "✍️ यादें / रेसिपी नोट",
+                placeholderDirectMemo: "यहाँ अपनी अनमोल यादें या गुप्त रेसिपी लिखें...",
+                storyTitle: "iomma & FUDI स्टोरी",
+                storyContent1: "<b>iomma</b> सभी माताओं के निस्वार्थ प्रेम का प्रतीक है जो बच्चों के लिए फ्रिज को गर्मी से भरती हैं।",
+                storyContent2: "<b>FUDI</b> आप हैं, उपयोगकर्ता, और माँ के प्यार में पले अनमोल बच्चे।",
+                storyContent3: "✨ \"हम सभी FUDI परिवार हैं, जो एक ही माँ की गोद में पले हैं।\"",
+                storyClose: "कहानी बंद करें", secTagFreezer: "फ्रीजर", secTagFridge: "फ्रिज", secTagVegetable: "सब्जी", secTagBeverage: "पेय",
+                filterInputOpt: "📅 भंडारण तिथि द्वारा", filterExpiryOpt: "⏳ समाप्ति तिथि द्वारा", dateStartBadge: "शुरू", dateExpiryBadge: "समाप्त",
+                shelfBtn: "⚙️ शेल्फ सेट करें", shelfModalHead: "कस्टम शेल्फ सेट करें", shelfAddBtn: "➕ जोड़ें", shelfResetBtn: "🔄 रीसेट", shelfCloseBtn: "संपन्न",
+                shelfPlaceholder: "नया शेल्फ नाम", shelfListLabel: "वर्तमान शेल्फ सूची:",
+                pastNoteHeader: "🕒 past note (संचित पुरानी यादें)"
+            },
+            DE: {
+                systemTag: "Mom's Warm Kitchen System", mainTitle: "Kühlschrank-Managementsystem mit Herz",
+                splashSubtitle: "Smarter Kühlschrank voller mütterlicher Liebe", splashTouchGuide: "✨ Berühren Sie den Kühlschrank zum Öffnen ✨",
+                freezer: "Gefrierfach", fridge: "Kühlschrank", vegetable: "Gemüsefach", beverage: "Getränke/Soße", all: "Alle anzeigen",
+                countUnit: "Stück", newReg: "Neu hinzufügen", placeholderFood: "Name (z.B. Milch, Fleisch)",
+                startDate: "Lagerdatum", expiryDate: "Ablaufdatum", submitBtn: "In den Kühlschrank",
+                showAllDate: "Alle Daten", allLoc: "Alle Orte", topShelf: "Oberes Fach", midShelf: "Mittleres Fach", botShelf: "Unteres Fach", deleteBtn: "Leeren",
+                memoTitle: "Erinnerungsnotiz", singleDeleteBtn: "Löschen", singleEditBtn: "Bearbeiten", closeBtn: "Schließen",
+                noPastMemory: "Noch keine Erinnerungen gespeichert.", editModalTitle: "Datum & Ort bearbeiten",
+                editLocLbl: "📌 Ablageort ändern", editStartLbl: "📅 Lagerdatum ändern", editExpiryLbl: "⏳ Ablaufdatum ändern",
+                cancelBtn: "Abbrechen", saveChangesBtn: "Speichern", dateHint: "JJJJ-MM-TT", toggleInputBtn: "Lebensmittel eingeben",
+                memoGuide: "[Lebensmittel-Checknotiz sichtbar]", newRegHeader: "Neu hinzufügen", directMemoLbl: "✍️ Erinnerungs- / Rezeptnotiz",
+                placeholderDirectMemo: "Schreiben Sie hier wertvolle Erinnerungen oder Ihr Rezept...",
+                storyTitle: "iomma & FUDI Story",
+                storyContent1: "<b>iomma</b> repräsentiert das bedingungslose Herz aller Mütter, die den Kühlschrank mit Wärme füllen.",
+                storyContent2: "<b>FUDI</b> sind Sie, der Nutzer, und die wertvollen Kinder.",
+                storyContent3: "✨ \"Wir sind alle die FUDI-Familie, aufgewachsen in derselben mütterlichen Umarmung.\"",
+                storyClose: "Geschichte schließen", secTagFreezer: "Gefrieren", secTagFridge: "Kühlen", secTagVegetable: "Gemüse", secTagBeverage: "Getränk",
+                filterInputOpt: "📅 Nach Lagerdatum", filterExpiryOpt: "⏳ Nach Ablaufdatum", dateStartBadge: "Start", dateExpiryBadge: "Ende",
+                shelfBtn: "⚙️ Fächer", shelfModalHead: "Fächer-Einstellung", shelfAddBtn: "➕ Hinzufügen", shelfResetBtn: "🔄 Zurücksetzen", shelfCloseBtn: "Fertig",
+                shelfPlaceholder: "Neuer Fachname", shelfListLabel: "Aktuelle Fächerliste:",
+                pastNoteHeader: "🕒 past note (Gespeicherte Erinnerungen)"
+            },
+            RU: {
+                systemTag: "Mom's Warm Kitchen System", mainTitle: "Система управления холодильником с душой",
+                splashSubtitle: "Умный холодильник, наполненный маминой любовью", splashTouchGuide: "✨ Коснитесь холодильника, чтобы открыть дверь ✨",
+                freezer: "Морозилка", fridge: "Холодильник", vegetable: "Овощной ящик", beverage: "Напитки/Соус", all: "Показать все",
+                countUnit: "шт", newReg: "Добавить новый", placeholderFood: "Название (например, молоко)",
+                startDate: "Дата закладки", expiryDate: "Срок годности", submitBtn: "Положить в холодильник",
+                showAllDate: "Все даты", allLoc: "Все места", topShelf: "Верхняя полка", midShelf: "Средняя полка", botShelf: "Нижняя полка", deleteBtn: "Очистить",
+                memoTitle: "Заметка на память", singleDeleteBtn: "Удалить", singleEditBtn: "Изменить", closeBtn: "Закрыть",
+                noPastMemory: "Записей пока нет.", editModalTitle: "Изменить дату и место",
+                editLocLbl: "📌 Изменить место хранения", editStartLbl: "📅 Изменить дату закладки", editExpiryLbl: "⏳ Изменить срок годности",
+                cancelBtn: "Отмена", saveChangesBtn: "Сохранить", dateHint: "ГГГГ-ММ-ДД", toggleInputBtn: "Ввести продукт",
+                memoGuide: "[Заметка о проверке продуктов видна]", newRegHeader: "Новая запись", directMemoLbl: "✍️ Воспоминание / Рецепт",
+                placeholderDirectMemo: "Напишите здесь ценные воспоминания или секретный рецепт...",
+                storyTitle: "История iomma & FUDI",
+                storyContent1: "<b>iomma</b> воплощает материнскую заботу и теплоту, с которой наполняют дом.",
+                storyContent2: "<b>FUDI</b> — это вы, пользователь, и дорогие дети, выросшие в любви.",
+                storyContent3: "✨ «Все мы — семья FUDI, воспитанные в одних материнских объятиях.»",
+                storyClose: "Закрыть историю", secTagFreezer: "Морозилка", secTagFridge: "Холод", secTagVegetable: "Овощи", secTagBeverage: "Напиток",
+                filterInputOpt: "📅 По дате закладки", filterExpiryOpt: "⏳ По сроку годности", dateStartBadge: "Старт", dateExpiryBadge: "Конец",
+                shelfBtn: "⚙️ Полки", shelfModalHead: "Настройка полок", shelfAddBtn: "➕ Добавить", shelfResetBtn: "🔄 Сброс", shelfCloseBtn: "Готово",
+                shelfPlaceholder: "Название новой полки", shelfListLabel: "Текущий список полок:",
+                pastNoteHeader: "🕒 past note (Накопленные воспоминания)"
+            }
+        };
+
+        const defaultShelves = {
+            freezer: ["topShelf", "midShelf", "botShelf"],
+            fridge: ["topShelf", "midShelf", "botShelf"],
+            vegetable: ["topShelf", "botShelf"],
+            beverage: ["topShelf", "midShelf", "botShelf"]
+        };
+
+        let userShelves;
+        const savedShelves = localStorage.getItem('customShelves_iomma_v58');
+        if (savedShelves) {
+            userShelves = JSON.parse(savedShelves);
+        } else {
+            userShelves = JSON.parse(JSON.stringify(defaultShelves));
+            localStorage.setItem('customShelves_iomma_v58', JSON.stringify(userShelves));
+        }
+
+        let currentLang = 'KR';
+        let currentSection = 'all';
+        let fridgeData;
+        let memoryHistory = {};
+
+        const savedData = localStorage.getItem('fridgeDataKey_iomma_v58');
+        const savedHistory = localStorage.getItem('memoryHistoryKey_iomma_v58');
+
+        if (savedData) {
+            fridgeData = JSON.parse(savedData);
+        } else {
+            fridgeData = {
+                freezer: [{ name: "삼겹살", subLocation: "topShelf", inputDate: "2026-07-10", expiryDate: "2026-07-27", note: "주말 가족 구이용 파티" }],
+                fridge: [{ name: "맛있는 김치", subLocation: "botShelf", inputDate: "2026-07-18", expiryDate: "2026-08-18", note: "25년 시골 엄마 김장김치" }],
+                vegetable: [{ name: "복숭아", subLocation: "topShelf", inputDate: "2026-07-27", expiryDate: "2026-08-05", note: "새콤달콤 복숭아" }],
+                beverage: [{ name: "시원한 콜라", subLocation: "topShelf", inputDate: "2026-07-18", expiryDate: "2027-07-18", note: "" }]
+            };
+            saveToLocalStorage();
+        }
+
+        if (savedHistory) {
+            memoryHistory = JSON.parse(savedHistory);
+        } else {
+            memoryHistory = { "삼겹살": [{ date: "2026-07-01", text: "횡성에서 구매함" }] };
+            saveToLocalStorage();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('fridgeDataKey_iomma_v58', JSON.stringify(fridgeData));
+            localStorage.setItem('memoryHistoryKey_iomma_v58', JSON.stringify(memoryHistory));
+            localStorage.setItem('customShelves_iomma_v58', JSON.stringify(userShelves));
+        }
+
+        function setDefaultInputDates() {
+            const startDateEl = document.getElementById('new-input-date');
+            const expiryDateEl = document.getElementById('new-expiry-date');
+            if (startDateEl && !startDateEl.value) startDateEl.value = "2026-07-27";
+            if (expiryDateEl && !expiryDateEl.value) expiryDateEl.value = "2026-08-03";
+        }
+
+        function getDaysLeft(expiryStr) {
+            const today = new Date("2026-07-27");
+            const expiry = new Date(expiryStr);
+            const diffTime = expiry.setHours(0,0,0,0) - today.setHours(0,0,0,0);
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            const t = i18n[lang] || i18n['KR'];
+
+            document.documentElement.lang = langMap[lang] || "ko";
+            document.getElementById('lang-select').value = lang;
+
+            document.getElementById('ui-splash-subtitle').innerText = t.splashSubtitle;
+            document.getElementById('ui-splash-touch-guide').innerText = t.splashTouchGuide;
+
+            document.getElementById('ui-system-tag').innerText = t.systemTag;
+            document.getElementById('ui-main-title').innerHTML = t.mainTitle;
+
+            document.getElementById('tab-freezer').innerText = t.freezer;
+            document.getElementById('tab-fridge').innerText = t.fridge;
+            document.getElementById('tab-vegetable').innerText = t.vegetable;
+            document.getElementById('tab-beverage').innerText = t.beverage;
+            document.getElementById('tab-all').innerText = t.all;
+
+            document.getElementById('ui-input-header').innerText = t.newRegHeader;
+            const targetSecTitle = currentSection === 'all' ? t.all : t[currentSection];
+            document.getElementById('input-target-title').innerText = targetSecTitle;
+
+            document.getElementById('new-food-name').placeholder = t.placeholderFood;
+
+            document.getElementById('ui-label-start').innerText = t.startDate;
+            document.getElementById('ui-label-expiry').innerText = t.expiryDate;
+            document.getElementById('input-submit-btn').innerText = t.submitBtn;
+
+            document.getElementById('opt-filter-input').innerText = t.filterInputOpt;
+            document.getElementById('opt-filter-expiry').innerText = t.filterExpiryOpt;
+            document.getElementById('clear-date-btn').innerText = t.showAllDate;
+            document.getElementById('ui-toggle-btn-text').innerText = t.toggleInputBtn;
+
+            document.getElementById('btn-shelf-config').innerText = t.shelfBtn || "⚙️ 칸 설정";
+            document.getElementById('ui-shelf-modal-head').innerText = t.shelfModalHead || "칸 커스텀 설정";
+            document.getElementById('new-shelf-name-input').placeholder = t.shelfPlaceholder || "새로운 칸 이름";
+            document.getElementById('ui-btn-add-shelf').innerText = t.shelfAddBtn || "➕ 추가";
+            document.getElementById('ui-shelf-list-label').innerText = t.shelfListLabel || "현재 설정된 칸 목록:";
+            document.getElementById('ui-btn-reset-shelf').innerText = t.shelfResetBtn || "🔄 초기화";
+            document.getElementById('ui-btn-close-shelf').innerText = t.shelfCloseBtn || "완료";
+
+            document.getElementById('ui-memo-guide-badge').innerText = t.memoGuide;
+            document.getElementById('ui-memo-past-header').innerText = t.pastNoteHeader || "🕒 past note";
+
+            document.getElementById('ui-label-direct-memo').innerText = t.directMemoLbl;
+            document.getElementById('new-food-direct-note').placeholder = t.placeholderDirectMemo;
+
+            updateFilterCustomText();
+
+            document.getElementById('story-modal-title').innerText = t.storyTitle;
+            document.getElementById('story-modal-desc').innerHTML = `<p>${t.storyContent1}</p><p>${t.storyContent2}</p><p class="text-emerald-700 font-bold pt-1 border-t border-slate-300">${t.storyContent3}</p>`;
+            document.getElementById('story-modal-btn').innerText = t.storyClose;
+
+            document.getElementById('ui-memo-btn-close').innerText = t.closeBtn;
+
+            document.getElementById('ui-edit-modal-title').innerText = t.editModalTitle;
+            document.getElementById('ui-edit-lbl-loc').innerText = t.editLocLbl;
+            document.getElementById('ui-edit-lbl-start').innerText = t.editStartLbl;
+            document.getElementById('ui-edit-lbl-expiry').innerText = t.editExpiryLbl;
+            document.getElementById('ui-edit-btn-cancel').innerText = t.cancelBtn;
+            document.getElementById('ui-edit-btn-save').innerText = t.saveChangesBtn;
+
+            setDefaultInputDates();
+            updateSummaryBoxHighlight(currentSection);
+            updateSummaryCounts();
+            updateSubLocationOptions('new-sub-location', currentSection);
+            renderFoodList();
+        }
+
+        function toggleInputForm() {
+            const form = document.getElementById('input-container');
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                form.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                form.classList.add('hidden');
+            }
+        }
+
+        function openBrandStoryModal() {
+            const modal = document.getElementById('brand-story-modal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+        }
+        function closeBrandStoryModal() {
+            const modal = document.getElementById('brand-story-modal');
+            modal.classList.add('hidden'); modal.classList.remove('flex');
+        }
+
+        function updateFilterCustomText() {
+            const filterInput = document.getElementById('filter-input-date');
+            const customText = document.getElementById('filter-date-custom-text');
+            const t = i18n[currentLang] || i18n['KR'];
+            customText.innerText = filterInput.value ? filterInput.value : t.dateHint;
+        }
+
+        function updateSummaryCounts() {
+            const unit = (i18n[currentLang] || i18n['KR']).countUnit;
+            document.getElementById('count-freezer').innerText = `${fridgeData.freezer.length}${unit}`;
+            document.getElementById('count-fridge').innerText = `${fridgeData.fridge.length}${unit}`;
+            document.getElementById('count-vegetable').innerText = `${fridgeData.vegetable.length}${unit}`;
+            document.getElementById('count-beverage').innerText = `${fridgeData.beverage.length}${unit}`;
+        }
+
+        function updateSummaryBoxHighlight(section) {
+            const lblFreezer = document.getElementById('ui-count-label-freezer');
+            const lblFridge = document.getElementById('ui-count-label-fridge');
+            const lblVegetable = document.getElementById('ui-count-label-vegetable');
+            const lblBeverage = document.getElementById('ui-count-label-beverage');
+
+            const mainCard = document.getElementById('main-list-card');
+            const t = i18n[currentLang] || i18n['KR'];
+
+            lblFreezer.innerText = "❄️ " + t.freezer;
+            lblFridge.innerText = "💧 " + t.fridge;
+            lblVegetable.innerText = "🌿 " + t.vegetable;
+            lblBeverage.innerText = "🥤 " + t.beverage;
+
+            mainCard.className = "rounded-2xl shadow-xs p-4 border-2 transition-all duration-300 ";
+
+            if (section === 'freezer') mainCard.className += "bg-blue-50/40 border-blue-300";
+            else if (section === 'fridge') mainCard.className += "bg-cyan-50/40 border-cyan-300";
+            else if (section === 'vegetable') mainCard.className += "bg-pink-50/40 border-pink-300";
+            else if (section === 'beverage') mainCard.className += "bg-purple-50/40 border-purple-300";
+            else mainCard.className += "bg-white border-slate-300";
+        }
+
+        function switchSection(section) {
+            currentSection = section;
+            ['freezer', 'fridge', 'vegetable', 'beverage', 'all'].forEach(s => {
+                const btn = document.getElementById(`tab-${s}`);
+                btn.className = s === 'all' ? "tab-all tab-btn w-full py-2 text-xs rounded-xl border transition duration-150 font-bold" : "tab-btn flex-1 py-2 text-xs rounded-xl transition duration-150 font-bold";
+            });
+
+            const submitBtn = document.getElementById('input-submit-btn');
+            const targetTitle = document.getElementById('input-target-title');
+            const t = i18n[currentLang] || i18n['KR'];
+
+            if (section === 'freezer') {
+                document.getElementById('tab-freezer').classList.add('active-freezer');
+                submitBtn.className = "w-full py-2.5 text-xs font-black rounded-xl transition shadow-xs btn-freezer";
+                targetTitle.innerText = t.freezer;
+            } else if (section === 'fridge') {
+                document.getElementById('tab-fridge').classList.add('active-fridge');
+                submitBtn.className = "w-full py-2.5 text-xs font-black rounded-xl transition shadow-xs btn-fridge";
+                targetTitle.innerText = t.fridge;
+            } else if (section === 'vegetable') {
+                document.getElementById('tab-vegetable').classList.add('active-vegetable');
+                submitBtn.className = "w-full py-2.5 text-xs font-black rounded-xl transition shadow-xs btn-vegetable";
+                targetTitle.innerText = t.vegetable;
+            } else if (section === 'beverage') {
+                document.getElementById('tab-beverage').classList.add('active-beverage');
+                submitBtn.className = "w-full py-2.5 text-xs font-black rounded-xl transition shadow-xs btn-beverage";
+                targetTitle.innerText = t.beverage;
+            } else {
+                document.getElementById('tab-all').classList.add('active-all');
+                submitBtn.className = "w-full py-2.5 text-xs font-black rounded-xl transition shadow-xs naver-green-bg text-white";
+                targetTitle.innerText = t.all;
+            }
+
+            updateSubLocationOptions('new-sub-location', section === 'all' ? 'freezer' : section);
+            updateSummaryBoxHighlight(section);
+            renderFoodList();
+        }
+
+        function updateSubLocationOptions(selectElementId, section, selectedValue = '') {
+            const selectEl = document.getElementById(selectElementId);
+            selectEl.innerHTML = '';
+            const targetSec = section === 'all' ? 'freezer' : section;
+            const options = userShelves[targetSec] || [];
+            const t = i18n[currentLang] || i18n['KR'];
+
+            options.forEach(shelfKeyOrName => {
+                const optionEl = document.createElement('option');
+                optionEl.value = shelfKeyOrName;
+                optionEl.innerText = t[shelfKeyOrName] || shelfKeyOrName;
+                if (shelfKeyOrName === selectedValue) optionEl.selected = true;
+                selectEl.appendChild(optionEl);
+            });
+        }
+
+        function openShelfConfigModal() {
+            const targetSec = currentSection === 'all' ? 'freezer' : currentSection;
+            const t = i18n[currentLang] || i18n['KR'];
+            document.getElementById('shelf-modal-sec-title').innerText = t[targetSec];
+            renderShelfManageList(targetSec);
+            document.getElementById('shelf-config-modal').classList.remove('hidden');
+            document.getElementById('shelf-config-modal').classList.add('flex');
+        }
+
+        function closeShelfConfigModal() {
+            document.getElementById('shelf-config-modal').classList.add('hidden');
+            document.getElementById('shelf-config-modal').classList.remove('flex');
+            updateSubLocationOptions('new-sub-location', currentSection === 'all' ? 'freezer' : currentSection);
+        }
+
+        function renderShelfManageList(sec) {
+            const container = document.getElementById('shelf-list-container');
+            container.innerHTML = '';
+            const shelves = userShelves[sec] || [];
+            const t = i18n[currentLang] || i18n['KR'];
+
+            shelves.forEach((sName, sIdx) => {
+                container.innerHTML += `
+                    <div class="flex justify-between items-center bg-white p-2 rounded-xl border border-slate-200">
+                        <span class="text-xs font-bold text-slate-800">${t[sName] || sName}</span>
+                        <button onclick="deleteShelf('${sec}', ${sIdx})" class="text-[10px] text-red-500 hover:bg-red-50 border border-red-200 px-2 py-0.5 rounded-md font-bold">
+                            ${t.singleDeleteBtn || '삭제'}
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function addNewShelf() {
+            const targetSec = currentSection === 'all' ? 'freezer' : currentSection;
+            const input = document.getElementById('new-shelf-name-input');
+            const name = input.value.trim();
+            if (!name) return;
+
+            if (!userShelves[targetSec]) userShelves[targetSec] = [];
+            userShelves[targetSec].push(name);
+            input.value = '';
+            saveToLocalStorage();
+            renderShelfManageList(targetSec);
+        }
+
+        function deleteShelf(sec, idx) {
+            if (userShelves[sec].length <= 1) return;
+            userShelves[sec].splice(idx, 1);
+            saveToLocalStorage();
+            renderShelfManageList(sec);
+        }
+
+        function resetShelfToDefault() {
+            const targetSec = currentSection === 'all' ? 'freezer' : currentSection;
+            userShelves[targetSec] = JSON.parse(JSON.stringify(defaultShelves[targetSec]));
+            saveToLocalStorage();
+            renderShelfManageList(targetSec);
+        }
+
+        function addFoodItem() {
+            const name = document.getElementById('new-food-name').value.trim();
+            const subLoc = document.getElementById('new-sub-location').value;
+            const inputDate = document.getElementById('new-input-date').value || "2026-07-27";
+            const expiryDate = document.getElementById('new-expiry-date').value || "2026-08-03";
+            const directNote = document.getElementById('new-food-direct-note').value.trim();
+            
+            if (!name) return;
+            
+            const targetSec = currentSection === 'all' ? 'freezer' : currentSection;
+            fridgeData[targetSec].push({ name, subLocation: subLoc, inputDate, expiryDate, note: directNote });
+
+            if (directNote) {
+                if (!memoryHistory[name]) { memoryHistory[name] = []; }
+                memoryHistory[name].unshift({ date: inputDate, text: directNote });
+            }
+
+            document.getElementById('new-food-name').value = '';
+            document.getElementById('new-food-direct-note').value = '';
+            document.getElementById('input-container').classList.add('hidden');
+            
+            saveToLocalStorage();
+            updateSummaryCounts();
+            renderFoodList();
+        }
+
+        function deleteFoodItem(section, index, foodName) {
+            if (confirm(`⚠️ [iomma]\n"${foodName}"`)) {
+                fridgeData[section].splice(index, 1);
+                saveToLocalStorage();
+                updateSummaryCounts();
+                renderFoodList();
+            }
+        }
+
+        function openMemoryModalByName(section, index, foodName) {
+            const t = i18n[currentLang] || i18n['KR'];
+            document.getElementById('memory-modal-title').innerText = `📜 [${foodName}] ${t.memoTitle}`;
+            document.getElementById('memory-target-section').value = section;
+            document.getElementById('memory-target-index').value = index;
+            document.getElementById('memory-target-name').value = foodName;
+            renderPastMemoryList(foodName, section, index);
+            const modal = document.getElementById('memory-modal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+        }
+
+        function renderPastMemoryList(foodName, section, index) {
+            const displayBox = document.getElementById('past-memory-display');
+            displayBox.innerHTML = '';
+            const t = i18n[currentLang] || i18n['KR'];
+
+            let historyList = memoryHistory[foodName] || [];
+            historyList.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (historyList.length === 0) {
+                displayBox.innerHTML = `<p class="text-slate-400 italic py-2 text-center">"${t.noPastMemory}"</p>`;
+            } else {
+                historyList.forEach((h, hIdx) => {
+                    displayBox.innerHTML += `
+                        <div class="bg-white p-2.5 rounded-xl border border-slate-300 shadow-2xs flex justify-between items-start gap-2">
+                            <div class="flex-1 pr-1" id="memo-content-view-${index}-${hIdx}">
+                                <span class="text-[9px] font-bold text-emerald-700 block mb-0.5">📅 ${h.date}</span>
+                                <p class="text-xs text-slate-900 font-medium leading-relaxed">${h.text}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                                <button onclick="deleteSingleHistoryNote('${foodName}', ${hIdx}, '${section}', ${index})" class="text-rose-600 hover:bg-rose-50 px-2 py-0.5 rounded-md text-[10px] font-bold transition border border-rose-200">${t.singleDeleteBtn}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        function deleteSingleHistoryNote(foodName, historyIndex, section, itemIndex) {
+            if (confirm(`⚠️ [iomma]`)) {
+                memoryHistory[foodName].splice(historyIndex, 1);
+                saveToLocalStorage();
+                renderPastMemoryList(foodName, section, itemIndex);
+                renderFoodList();
+            }
+        }
+
+        function closeMemoryModal() { document.getElementById('memory-modal').classList.add('hidden'); document.getElementById('memory-modal').classList.remove('flex'); }
+
+        function renderFoodList() {
+            const listContainer = document.getElementById('food-list');
+            listContainer.innerHTML = '';
+            const filterDate = document.getElementById('filter-input-date').value;
+            const filterType = document.getElementById('filter-type-select').value;
+            const t = i18n[currentLang] || i18n['KR'];
+
+            let totalCount = 0;
+            const sectionsToRender = (currentSection === 'all' || filterDate) ? ['freezer', 'fridge', 'vegetable', 'beverage'] : [currentSection];
+
+            sectionsToRender.forEach(sec => {
+                fridgeData[sec].forEach((item, index) => {
+                    if (filterDate) {
+                        const targetDate = filterType === 'input' ? item.inputDate : item.expiryDate;
+                        if (targetDate !== filterDate) return;
+                    }
+
+                    totalCount++;
+                    const daysLeft = getDaysLeft(item.expiryDate);
+                    const isWarning = daysLeft <= 2;
+                    
+                    let bgPastelClass = "bg-white";
+                    if (sec === 'freezer') bgPastelClass = "bg-pastel-freezer";
+                    else if (sec === 'fridge') bgPastelClass = "bg-pastel-fridge";
+                    else if (sec === 'vegetable') bgPastelClass = "bg-pastel-vegetable";
+                    else if (sec === 'beverage') bgPastelClass = "bg-pastel-beverage";
+
+                    let borderClass = isWarning ? "border-2 border-red-400 bg-red-50/90" : `border ${bgPastelClass}`;
+                    
+                    const dateBadgeHtml = `
+                        <div onclick="openEditModalFromExpiryBadge('${sec}', ${index}, '${item.name}')" 
+                             class="flex flex-col text-[8.5px] leading-tight cursor-pointer px-2 py-1 rounded-lg border font-bold ${isWarning ? 'bg-red-600 text-white border-red-700' : 'bg-white/80 text-slate-700 border-slate-300'}" title="날짜 변경">
+                            <span>${t.dateStartBadge || '시작'} ${item.inputDate}</span>
+                            <span>${t.dateExpiryBadge || '마감'} ${item.expiryDate}</span>
+                        </div>
+                    `;
+                    
+                    let locTagText = "";
+                    if (currentSection === 'all') {
+                        if (sec === 'freezer') locTagText = t.secTagFreezer;
+                        else if (sec === 'fridge') locTagText = t.secTagFridge;
+                        else if (sec === 'vegetable') locTagText = t.secTagVegetable;
+                        else if (sec === 'beverage') locTagText = t.secTagBeverage;
+                    } else {
+                        const subLoc = item.subLocation || 'topShelf';
+                        locTagText = t[subLoc] || subLoc;
+                    }
+
+                    listContainer.innerHTML += `
+                        <div class="${borderClass} py-1.5 px-2.5 rounded-xl shadow-2xs transition flex items-center justify-between gap-1.5">
+                            <div class="flex items-center space-x-1.5 min-w-0 flex-1">
+                                <span class="text-[9.5px] px-1.5 py-0.5 rounded font-extrabold bg-white/90 text-slate-700 border border-slate-300 whitespace-nowrap shadow-2xs">${locTagText}</span> 
+                                <span onclick="openMemoryModalByName('${sec}', ${index}, '${item.name}')" class="font-black text-slate-900 text-xs truncate cursor-pointer hover:text-emerald-700 transition" title="추억 메모 보기">${item.name}</span> 
+                            </div>
+
+                            <div class="flex items-center gap-1 flex-shrink-0">
+                                ${dateBadgeHtml}
+                                <button onclick="deleteFoodItem('${sec}', ${index}, '${item.name}')" class="bg-white border border-red-200 text-red-600 px-2 py-1.5 rounded-lg text-[9.5px] font-bold transition whitespace-nowrap hover:bg-red-50">${t.deleteBtn}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+
+            const secTitleText = currentSection === 'all' ? t.all : t[currentSection];
+            document.getElementById('ui-section-main-heading').innerText = `👑 ${secTitleText} (${totalCount}${t.countUnit})`;
+            document.getElementById('ui-memo-guide-badge').innerText = t.memoGuide;
+        }
+
+        function openEditModalFromExpiryBadge(section, index, foodName) {
+            const item = fridgeData[section][index];
+            document.getElementById('edit-food-name-title').innerText = foodName;
+            document.getElementById('edit-target-section').value = section;
+            document.getElementById('edit-target-index').value = index;
+            document.getElementById('edit-input-date').value = item.inputDate;
+            document.getElementById('edit-expiry-date').value = item.expiryDate;
+            updateSubLocationOptions('edit-sub-location', section, item.subLocation);
+            document.getElementById('edit-date-modal').classList.remove('hidden');
+            document.getElementById('edit-date-modal').classList.add('flex');
+        }
+
+        function closeEditModal() { document.getElementById('edit-date-modal').classList.add('hidden'); document.getElementById('edit-date-modal').classList.remove('flex'); }
+
+        function saveDateChanges() {
+            const section = document.getElementById('edit-target-section').value;
+            const index = parseInt(document.getElementById('edit-target-index').value);
+            fridgeData[section][index].subLocation = document.getElementById('edit-sub-location').value;
+            fridgeData[section][index].inputDate = document.getElementById('edit-input-date').value;
+            fridgeData[section][index].expiryDate = document.getElementById('edit-expiry-date').value;
+            saveToLocalStorage(); renderFoodList(); closeEditModal();
+        }
+
+        function onDateChecked() { updateFilterCustomText(); renderFoodList(); }
+        function clearDateFilter() { document.getElementById('filter-input-date').value = ''; updateFilterCustomText(); renderFoodList(); }
+
+        changeLanguage('KR');
+        switchSection('all');
+    </script>
+</body>
+</html>
