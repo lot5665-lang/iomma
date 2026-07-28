@@ -9,6 +9,11 @@
   "icons": [
     {
       "src": "https://images.unsplash.com/photo-1584992236310-6edddc08acff?q=80&w=500&auto=format&fit=crop",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "https://images.unsplash.com/photo-1584992236310-6edddc08acff?q=80&w=500&auto=format&fit=crop",
       "sizes": "512x512",
       "type": "image/jpeg"
     }
