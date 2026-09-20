@@ -103,7 +103,8 @@
             <span class="naver-green-text font-black text-2xl">iomma</span>
             <span class="text-sm font-bold text-slate-500">for FUDI ✨</span>
         </h1>
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-1.5">
+            <button id="noti-bell-btn" onclick="toggleNotifications()" class="text-base leading-none w-8 h-8 rounded-xl border flex items-center justify-center transition bg-slate-100 border-slate-300" title="" aria-label="">🔕</button>
             <span class="text-sm">🌐</span>
             <select id="lang-select" onchange="changeLanguage(this.value)" class="text-sm bg-slate-100 font-bold px-2 py-1 rounded-xl border border-slate-300 focus:outline-none text-slate-800">
                 <option value="KR">🇰🇷 한국어</option>
@@ -246,6 +247,7 @@
                         <span id="ui-memo-guide-badge" class="text-[12px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200">[식품체크 메모가 보입니다]</span>
                     </div>
                 </h2>
+                <div id="expiry-alert-banner" class="hidden mb-2.5 p-2.5 rounded-xl border-2 border-rose-300 bg-rose-50" role="status"></div>
                 <div id="food-list" class="space-y-2"></div>
             </div>
         </main>
@@ -338,6 +340,8 @@
             </div>
         </div>
     </div>
+
+    <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[110] max-w-[90%] bg-slate-900 text-white text-sm font-bold px-4 py-2.5 rounded-2xl shadow-xl text-center" role="status"></div>
 
     <footer class="bg-white text-slate-600 text-center py-6 text-sm font-bold mt-auto border-t border-slate-200 max-w-md mx-auto w-full">
         <p class="font-black text-slate-800 text-sm">🌸 iomma Smart Kitchen System</p>
@@ -610,6 +614,26 @@
             }
         };
 
+        /* ⏰ [마감 임박 알림 설정 / 다국어 문구] — data 초기화보다 위에 두어야 saveToLocalStorage에서 안전하게 쓸 수 있음 */
+        const EXPIRY_ALERT_DAYS = 3;            // 마감 3일 전부터(이미 지난 것 포함) 알림 대상
+        const NOTI_PREF_KEY = 'iomma_noti_enabled_v1';
+        const NOTI_LAST_KEY = 'iomma_noti_last_v1';
+        const SW_DB = 'iomma-sw', SW_STORE = 'kv';
+
+        const alertI18n = {
+            KR: { pushTitle: "iomma 마감 임박 알림", bannerTitle: "마감 임박 재료", msgExpired: "{name} 마감 {n}일 지남!", msgToday: "{name} 오늘 마감!", msgSoon: "{name} {n}일 뒤 마감!", msgMore: "외 {n}개 더", notiOn: "🔔 마감 알림이 켜졌어요", notiOff: "🔕 마감 알림을 껐어요", notiDenied: "알림이 차단되어 있어요. 휴대폰 설정에서 알림을 허용해 주세요.", notiUnsupported: "이 환경에서는 알림을 쓸 수 없어요. 목록 위 배너로 확인해 주세요.", bellTitleOn: "마감 알림 끄기", bellTitleOff: "마감 알림 켜기" },
+            EN: { pushTitle: "iomma expiry alert", bannerTitle: "Items expiring soon", msgExpired: "{name} expired {n} day(s) ago!", msgToday: "{name} expires today!", msgSoon: "{name} expires in {n} day(s)!", msgMore: "+{n} more", notiOn: "🔔 Expiry alerts are on", notiOff: "🔕 Expiry alerts are off", notiDenied: "Notifications are blocked. Please allow them in your phone settings.", notiUnsupported: "Notifications aren't available here. Check the banner above the list.", bellTitleOn: "Turn off expiry alerts", bellTitleOff: "Turn on expiry alerts" },
+            ES: { pushTitle: "Aviso de caducidad de iomma", bannerTitle: "Alimentos por caducar", msgExpired: "¡{name} caducó hace {n} día(s)!", msgToday: "¡{name} caduca hoy!", msgSoon: "¡{name} caduca en {n} día(s)!", msgMore: "+{n} más", notiOn: "🔔 Avisos de caducidad activados", notiOff: "🔕 Avisos de caducidad desactivados", notiDenied: "Las notificaciones están bloqueadas. Actívalas en los ajustes del teléfono.", notiUnsupported: "Aquí no hay notificaciones. Mira el aviso sobre la lista.", bellTitleOn: "Desactivar avisos", bellTitleOff: "Activar avisos" },
+            ZH: { pushTitle: "iomma 临期提醒", bannerTitle: "即将到期的食材", msgExpired: "{name} 已过期{n}天！", msgToday: "{name} 今天到期！", msgSoon: "{name} {n}天后到期！", msgMore: "还有{n}项", notiOn: "🔔 已开启到期提醒", notiOff: "🔕 已关闭到期提醒", notiDenied: "通知已被屏蔽，请在手机设置中允许通知。", notiUnsupported: "当前环境不支持通知，请查看列表上方的提示。", bellTitleOn: "关闭到期提醒", bellTitleOff: "开启到期提醒" },
+            TH: { pushTitle: "แจ้งเตือนวันหมดอายุ iomma", bannerTitle: "วัตถุดิบใกล้หมดอายุ", msgExpired: "{name} หมดอายุแล้ว {n} วัน!", msgToday: "{name} หมดอายุวันนี้!", msgSoon: "{name} จะหมดอายุในอีก {n} วัน!", msgMore: "และอีก {n} รายการ", notiOn: "🔔 เปิดการแจ้งเตือนวันหมดอายุแล้ว", notiOff: "🔕 ปิดการแจ้งเตือนวันหมดอายุแล้ว", notiDenied: "การแจ้งเตือนถูกบล็อก โปรดอนุญาตในการตั้งค่าโทรศัพท์", notiUnsupported: "ไม่รองรับการแจ้งเตือนในสภาพแวดล้อมนี้ ดูแบนเนอร์เหนือรายการแทน", bellTitleOn: "ปิดการแจ้งเตือน", bellTitleOff: "เปิดการแจ้งเตือน" },
+            FR: { pushTitle: "Alerte péremption iomma", bannerTitle: "Produits bientôt périmés", msgExpired: "{name} périmé depuis {n} jour(s) !", msgToday: "{name} périme aujourd'hui !", msgSoon: "{name} périme dans {n} jour(s) !", msgMore: "+{n} autres", notiOn: "🔔 Alertes de péremption activées", notiOff: "🔕 Alertes de péremption désactivées", notiDenied: "Les notifications sont bloquées. Autorisez-les dans les réglages du téléphone.", notiUnsupported: "Notifications indisponibles ici. Consultez la bannière au-dessus de la liste.", bellTitleOn: "Désactiver les alertes", bellTitleOff: "Activer les alertes" },
+            JP: { pushTitle: "iomma 期限間近のお知らせ", bannerTitle: "期限が近い食材", msgExpired: "{name} は期限を{n}日過ぎました！", msgToday: "{name} は今日が期限です！", msgSoon: "{name} はあと{n}日で期限です！", msgMore: "ほか{n}件", notiOn: "🔔 期限通知をオンにしました", notiOff: "🔕 期限通知をオフにしました", notiDenied: "通知がブロックされています。端末の設定で許可してください。", notiUnsupported: "この環境では通知を使えません。リスト上のバナーをご確認ください。", bellTitleOn: "期限通知をオフ", bellTitleOff: "期限通知をオン" },
+            DE: { pushTitle: "iomma Ablauf-Erinnerung", bannerTitle: "Bald ablaufende Lebensmittel", msgExpired: "{name} ist seit {n} Tag(en) abgelaufen!", msgToday: "{name} läuft heute ab!", msgSoon: "{name} läuft in {n} Tag(en) ab!", msgMore: "+{n} weitere", notiOn: "🔔 Ablauf-Erinnerungen aktiviert", notiOff: "🔕 Ablauf-Erinnerungen deaktiviert", notiDenied: "Benachrichtigungen sind blockiert. Bitte in den Telefoneinstellungen erlauben.", notiUnsupported: "Benachrichtigungen sind hier nicht verfügbar. Siehe Banner über der Liste.", bellTitleOn: "Erinnerungen ausschalten", bellTitleOff: "Erinnerungen einschalten" },
+            RU: { pushTitle: "Напоминание о сроке iomma", bannerTitle: "Скоро истекает срок", msgExpired: "{name}: срок истёк {n} дн. назад!", msgToday: "{name}: срок истекает сегодня!", msgSoon: "{name}: срок истекает через {n} дн.!", msgMore: "ещё {n}", notiOn: "🔔 Напоминания включены", notiOff: "🔕 Напоминания выключены", notiDenied: "Уведомления заблокированы. Разрешите их в настройках телефона.", notiUnsupported: "Здесь уведомления недоступны. Смотрите баннер над списком.", bellTitleOn: "Выключить напоминания", bellTitleOff: "Включить напоминания" },
+            VI: { pushTitle: "Nhắc hạn sử dụng iomma", bannerTitle: "Thực phẩm sắp hết hạn", msgExpired: "{name} đã hết hạn {n} ngày!", msgToday: "{name} hết hạn hôm nay!", msgSoon: "{name} còn {n} ngày là hết hạn!", msgMore: "và {n} mục nữa", notiOn: "🔔 Đã bật nhắc hạn sử dụng", notiOff: "🔕 Đã tắt nhắc hạn sử dụng", notiDenied: "Thông báo đang bị chặn. Hãy cho phép trong cài đặt điện thoại.", notiUnsupported: "Môi trường này không hỗ trợ thông báo. Hãy xem biểu ngữ phía trên danh sách.", bellTitleOn: "Tắt nhắc hạn", bellTitleOff: "Bật nhắc hạn" },
+            ID: { pushTitle: "Pengingat kedaluwarsa iomma", bannerTitle: "Bahan segera kedaluwarsa", msgExpired: "{name} sudah kedaluwarsa {n} hari!", msgToday: "{name} kedaluwarsa hari ini!", msgSoon: "{name} kedaluwarsa {n} hari lagi!", msgMore: "+{n} lagi", notiOn: "🔔 Pengingat kedaluwarsa aktif", notiOff: "🔕 Pengingat kedaluwarsa nonaktif", notiDenied: "Notifikasi diblokir. Izinkan di pengaturan ponsel.", notiUnsupported: "Notifikasi tidak tersedia di sini. Lihat banner di atas daftar.", bellTitleOn: "Matikan pengingat", bellTitleOff: "Aktifkan pengingat" }
+        };
+
         const defaultShelves = {
             freezer: ["topShelf", "midShelf", "botShelf"],
             fridge: ["topShelf", "midShelf", "botShelf"],
@@ -660,6 +684,7 @@
             localStorage.setItem('fridgeDataKey_iomma_v60', JSON.stringify(fridgeData));
             localStorage.setItem('memoryHistoryKey_iomma_v60', JSON.stringify(memoryHistory));
             localStorage.setItem('customShelves_iomma_v60', JSON.stringify(userShelves));
+            syncStateToSW();
         }
 
         function getTodayString() {
@@ -679,10 +704,12 @@
         }
 
         function getDaysLeft(expiryStr) {
-            const today = new Date();
-            const expiry = new Date(expiryStr);
-            const diffTime = expiry.setHours(0,0,0,0) - today.setHours(0,0,0,0);
-            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            const p = String(expiryStr || '').split('-').map(Number);
+            if (p.length !== 3 || p.some(isNaN)) return NaN;
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const expiry = new Date(p[0], p[1] - 1, p[2]);
+            return Math.round((expiry - today) / (1000 * 60 * 60 * 24));
         }
 
         /* 🎯 [언어 변환 실행 함수] */
@@ -750,6 +777,8 @@
             document.getElementById('ui-edit-btn-save').innerText = t.saveChangesBtn;
 
             setDefaultInputDates();
+            updateBellUI();
+            syncStateToSW();
             updateSummaryBoxHighlight(currentSection);
             updateSummaryCounts();
             updateSubLocationOptions('new-sub-location', currentSection);
@@ -1107,7 +1136,7 @@
             }
         }
 
-        /* 🎯 [다국어 변환 시 글자 넘침 방지 정밀 렌더링] */
+        /* 🎯 [다국어 변환 시 글자 넘침 방지 정밀 렌더링] + 마감 지난 것 → 임박 → 여유 순 자동 정렬 */
         function renderFoodList() {
             const listContainer = document.getElementById('food-list');
             listContainer.innerHTML = '';
@@ -1115,66 +1144,88 @@
             const filterType = document.getElementById('filter-type-select').value;
             const t = i18n[currentLang] || i18n['KR'];
 
-            let totalCount = 0;
             const sectionsToRender = (currentSection === 'all' || filterDate) ? ['freezer', 'fridge', 'vegetable', 'beverage'] : [currentSection];
 
+            // 삭제/수정 버튼은 원래 배열 index가 필요하므로, 정렬해도 index를 같이 들고 다닌다.
+            const entries = [];
             sectionsToRender.forEach(sec => {
                 fridgeData[sec].forEach((item, index) => {
                     if (filterDate) {
                         const targetDate = filterType === 'input' ? item.inputDate : item.expiryDate;
                         if (targetDate !== filterDate) return;
                     }
-
-                    totalCount++;
-                    const daysLeft = getDaysLeft(item.expiryDate);
-                    const isWarning = daysLeft <= 2;
-                    
-                    let bgPastelClass = "bg-white";
-                    if (sec === 'freezer') bgPastelClass = "bg-pastel-freezer";
-                    else if (sec === 'fridge') bgPastelClass = "bg-pastel-fridge";
-                    else if (sec === 'vegetable') bgPastelClass = "bg-pastel-vegetable";
-                    else if (sec === 'beverage') bgPastelClass = "bg-pastel-beverage";
-
-                    let borderClass = isWarning ? "border-2 border-rose-400 bg-rose-50 shadow-xs" : `border border-slate-300 ${bgPastelClass}`;
-                    
-                    const dateBadgeHtml = `
-                        <div onclick="openEditModalFromExpiryBadge('${sec}', ${index}, '${esc(item.name)}')" 
-                             class="flex flex-col text-[12px] leading-tight cursor-pointer px-1.5 py-1 rounded-md border font-bold whitespace-nowrap ${isWarning ? 'bg-rose-600 text-white border-rose-700' : 'bg-white text-slate-800 border-slate-300'}" title="날짜 변경">
-                            <span>${t.dateStartBadge || '시작'} ${item.inputDate}</span>
-                            <span>${t.dateExpiryBadge || '마감'} ${item.expiryDate}</span>
-                        </div>
-                    `;
-                    
-                    let locTagText = "";
-                    if (currentSection === 'all') {
-                        if (sec === 'freezer') locTagText = t.secTagFreezer;
-                        else if (sec === 'fridge') locTagText = t.secTagFridge;
-                        else if (sec === 'vegetable') locTagText = t.secTagVegetable;
-                        else if (sec === 'beverage') locTagText = t.secTagBeverage;
-                    } else {
-                        const subLoc = item.subLocation || 'topShelf';
-                        locTagText = t[subLoc] || subLoc;
-                    }
-
-                    listContainer.innerHTML += `
-                        <div class="${borderClass} p-2 rounded-2xl transition flex items-center justify-between gap-1.5 shadow-2xs">
-                            <div class="flex items-center space-x-1.5 min-w-0 flex-1">
-                                <span class="text-[13px] px-1.5 py-0.5 rounded font-black bg-white text-slate-800 border border-slate-300 whitespace-nowrap shadow-2xs flex-shrink-0">${locTagText}</span> 
-                                <span onclick="openMemoryModalByName('${sec}', ${index}, '${esc(item.name)}')" class="font-black text-slate-900 text-sm cursor-pointer hover:text-emerald-700 transition leading-snug break-words" title="추억 메모 보기">${item.name}</span> 
-                            </div>
-
-                            <div class="flex items-center gap-1 flex-shrink-0">
-                                ${dateBadgeHtml}
-                                <button onclick="deleteFoodItem('${sec}', ${index}, '${esc(item.name)}')" class="bg-white border border-rose-300 text-rose-700 px-2 py-2 rounded-lg text-[13px] font-black transition whitespace-nowrap hover:bg-rose-50 shadow-2xs">${t.deleteBtn}</button>
-                            </div>
-                        </div>
-                    `;
+                    entries.push({ sec, item, index, daysLeft: getDaysLeft(item.expiryDate) });
                 });
             });
+
+            // 마감일이 빠른 순 = 이미 지난 것(가장 오래된 것부터) → 오늘/임박 → 여유. 날짜가 비어 있으면 맨 아래.
+            const sortKey = d => Number.isFinite(d) ? d : Number.MAX_SAFE_INTEGER;
+            entries.sort((a, b) => sortKey(a.daysLeft) - sortKey(b.daysLeft));
+
+            const totalCount = entries.length;
+
+            listContainer.innerHTML = entries.map(({ sec, item, index, daysLeft }) => {
+                const isExpired = daysLeft < 0;
+                const isWarning = daysLeft <= 2;
+
+                let bgPastelClass = "bg-white";
+                if (sec === 'freezer') bgPastelClass = "bg-pastel-freezer";
+                else if (sec === 'fridge') bgPastelClass = "bg-pastel-fridge";
+                else if (sec === 'vegetable') bgPastelClass = "bg-pastel-vegetable";
+                else if (sec === 'beverage') bgPastelClass = "bg-pastel-beverage";
+
+                let borderClass;
+                if (isExpired) borderClass = "border-2 border-rose-500 bg-rose-100 shadow-xs";
+                else if (isWarning) borderClass = "border-2 border-rose-400 bg-rose-50 shadow-xs";
+                else borderClass = `border border-slate-300 ${bgPastelClass}`;
+
+                let ddayChipHtml = '';
+                if (Number.isFinite(daysLeft) && daysLeft <= EXPIRY_ALERT_DAYS) {
+                    const label = isExpired ? `D+${-daysLeft}` : (daysLeft === 0 ? 'D-Day' : `D-${daysLeft}`);
+                    const chipCls = isExpired ? 'bg-rose-700 text-white' : 'bg-amber-300 text-amber-950';
+                    ddayChipHtml = `<span class="flex-shrink-0 text-[11px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap ${chipCls}">${label}</span>`;
+                }
+
+                const dateBadgeHtml = `
+                    <div onclick="openEditModalFromExpiryBadge('${sec}', ${index}, '${esc(item.name)}')" 
+                         class="flex flex-col text-[12px] leading-tight cursor-pointer px-1.5 py-1 rounded-md border font-bold whitespace-nowrap ${isWarning ? 'bg-rose-600 text-white border-rose-700' : 'bg-white text-slate-800 border-slate-300'}" title="날짜 변경">
+                        <span>${t.dateStartBadge || '시작'} ${item.inputDate}</span>
+                        <span>${t.dateExpiryBadge || '마감'} ${item.expiryDate}</span>
+                    </div>
+                `;
+
+                let locTagText = "";
+                if (currentSection === 'all') {
+                    if (sec === 'freezer') locTagText = t.secTagFreezer;
+                    else if (sec === 'fridge') locTagText = t.secTagFridge;
+                    else if (sec === 'vegetable') locTagText = t.secTagVegetable;
+                    else if (sec === 'beverage') locTagText = t.secTagBeverage;
+                } else {
+                    const subLoc = item.subLocation || 'topShelf';
+                    locTagText = t[subLoc] || subLoc;
+                }
+
+                return `
+                    <div class="${borderClass} p-2 rounded-2xl transition flex items-center justify-between gap-1.5 shadow-2xs">
+                        <div class="flex items-center space-x-1.5 min-w-0 flex-1">
+                            <span class="text-[13px] px-1.5 py-0.5 rounded font-black bg-white text-slate-800 border border-slate-300 whitespace-nowrap shadow-2xs flex-shrink-0">${locTagText}</span> 
+                            <span onclick="openMemoryModalByName('${sec}', ${index}, '${esc(item.name)}')" class="font-black text-slate-900 text-sm cursor-pointer hover:text-emerald-700 transition leading-snug break-words" title="추억 메모 보기">${item.name}</span> 
+                            ${ddayChipHtml}
+                        </div>
+
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                            ${dateBadgeHtml}
+                            <button onclick="deleteFoodItem('${sec}', ${index}, '${esc(item.name)}')" class="bg-white border border-rose-300 text-rose-700 px-2 py-2 rounded-lg text-[13px] font-black transition whitespace-nowrap hover:bg-rose-50 shadow-2xs">${t.deleteBtn}</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
             const secTitleText = currentSection === 'all' ? t.all : t[currentSection];
             document.getElementById('ui-section-main-heading').innerText = `👑 ${secTitleText} (${totalCount}${t.countUnit})`;
             document.getElementById('ui-memo-guide-badge').innerText = t.memoGuide;
+
+            renderExpiryBanner();
         }
 
         function openEditModalFromExpiryBadge(section, index, foodName) {
@@ -1203,9 +1254,202 @@
         function onDateChecked() { updateFilterCustomText(); renderFoodList(); }
         function clearDateFilter() { document.getElementById('filter-input-date').value = ''; updateFilterCustomText(); renderFoodList(); }
 
+/* ⏰ ==================== 마감 임박 알림 ==================== */
+        function escHtml(str) {
+            return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function getAlertT() { return alertI18n[currentLang] || alertI18n['KR']; }
+
+        function formatAlertMsg(a, at) {
+            const tpl = a.daysLeft < 0 ? at.msgExpired : (a.daysLeft === 0 ? at.msgToday : at.msgSoon);
+            return tpl.replace('{name}', () => a.name).replace('{n}', () => Math.abs(a.daysLeft));
+        }
+
+        // 필터/탭과 상관없이 냉장고 전체에서 "마감 지남 + 3일 이내" 재료를 급한 순으로 반환
+        function getExpiryAlerts() {
+            const list = [];
+            ['freezer', 'fridge', 'vegetable', 'beverage'].forEach(sec => {
+                (fridgeData[sec] || []).forEach(item => {
+                    const d = getDaysLeft(item.expiryDate);
+                    if (Number.isFinite(d) && d <= EXPIRY_ALERT_DAYS) list.push({ name: item.name, daysLeft: d });
+                });
+            });
+            list.sort((a, b) => a.daysLeft - b.daysLeft);
+            return list;
+        }
+
+        // 목록 위 배너 (알림 권한과 무관하게 항상 동작)
+        function renderExpiryBanner() {
+            const box = document.getElementById('expiry-alert-banner');
+            if (!box) return;
+            const alerts = getExpiryAlerts();
+            if (!alerts.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+            const at = getAlertT();
+            const shown = alerts.slice(0, 4);
+            const rest = alerts.length - shown.length;
+            box.innerHTML = `
+                <div class="text-sm font-black text-rose-800">⏰ ${escHtml(at.bannerTitle)} (${alerts.length})</div>
+                <ul class="mt-1 space-y-0.5">
+                    ${shown.map(a => `<li class="text-[13px] font-bold ${a.daysLeft < 0 ? 'text-rose-900' : 'text-amber-900'}">• ${escHtml(formatAlertMsg(a, at))}</li>`).join('')}
+                    ${rest > 0 ? `<li class="text-[12px] font-bold text-slate-600">${escHtml(at.msgMore.replace('{n}', () => rest))}</li>` : ''}
+                </ul>`;
+            box.classList.remove('hidden');
+        }
+
+        let toastTimer;
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.innerText = msg;
+            el.classList.remove('hidden');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+        }
+
+        function notiSupported() {
+            return 'Notification' in window && 'serviceWorker' in navigator && window.isSecureContext;
+        }
+        function notiEnabled() {
+            return notiSupported() && Notification.permission === 'granted' && localStorage.getItem(NOTI_PREF_KEY) !== '0';
+        }
+
+        function updateBellUI() {
+            const btn = document.getElementById('noti-bell-btn');
+            if (!btn) return;
+            const at = getAlertT();
+            const on = notiEnabled();
+            btn.innerText = on ? '🔔' : '🔕';
+            btn.title = on ? at.bellTitleOn : at.bellTitleOff;
+            btn.setAttribute('aria-label', btn.title);
+            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            btn.className = 'text-base leading-none w-8 h-8 rounded-xl border flex items-center justify-center transition ' + (on ? 'bg-emerald-50 border-emerald-400' : 'bg-slate-100 border-slate-300');
+        }
+
+        // 서비스 워커(sw.js)는 localStorage를 못 읽으므로 IndexedDB에 사본을 둔다.
+        function openSwDb() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(SW_DB, 1);
+                req.onupgradeneeded = () => req.result.createObjectStore(SW_STORE);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        async function swKvSet(key, value) {
+            const db = await openSwDb();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(SW_STORE, 'readwrite');
+                tx.objectStore(SW_STORE).put(value, key);
+                tx.oncomplete = () => { db.close(); resolve(); };
+                tx.onerror = () => { db.close(); reject(tx.error); };
+            });
+        }
+        function syncStateToSW() {
+            try {
+                if (!('indexedDB' in window)) return;
+                const at = getAlertT();
+                const items = [];
+                ['freezer', 'fridge', 'vegetable', 'beverage'].forEach(sec => {
+                    (fridgeData[sec] || []).forEach(i => items.push({ name: i.name, expiryDate: i.expiryDate }));
+                });
+                swKvSet('state', {
+                    enabled: notiEnabled(),
+                    days: EXPIRY_ALERT_DAYS,
+                    items,
+                    msgs: { pushTitle: at.pushTitle, msgExpired: at.msgExpired, msgToday: at.msgToday, msgSoon: at.msgSoon, msgMore: at.msgMore }
+                }).catch(() => {});
+            } catch (e) { /* 알림은 부가 기능이므로 실패해도 앱은 계속 동작 */ }
+        }
+
+        function getSwRegistration() {
+            return navigator.serviceWorker.register('./sw.js').then(() => navigator.serviceWorker.ready);
+        }
+
+        // 앱을 닫아 둬도 하루 한 번쯤 확인하도록 시도(Chrome이 허용하는 환경에서만 동작하는 부가 기능)
+        async function registerPeriodicSync(reg) {
+            try {
+                if (!reg || !('periodicSync' in reg)) return;
+                const st = await navigator.permissions.query({ name: 'periodic-background-sync' });
+                if (st.state === 'granted') await reg.periodicSync.register('iomma-expiry-check', { minInterval: 12 * 60 * 60 * 1000 });
+            } catch (e) { /* 미지원 환경 */ }
+        }
+        async function unregisterPeriodicSync() {
+            try {
+                const reg = await navigator.serviceWorker.getRegistration();
+                if (reg && reg.periodicSync) await reg.periodicSync.unregister('iomma-expiry-check');
+            } catch (e) { /* 무시 */ }
+        }
+
+        async function sendExpiryNotification(alerts) {
+            const at = getAlertT();
+            const reg = await getSwRegistration();
+            const shown = alerts.slice(0, 5);
+            let body = shown.map(a => formatAlertMsg(a, at)).join('\n');
+            if (alerts.length > shown.length) body += '\n' + at.msgMore.replace('{n}', () => alerts.length - shown.length);
+            await reg.showNotification(`${at.pushTitle} (${alerts.length})`, { body, tag: 'iomma-expiry', data: { url: './' } });
+        }
+
+        // 앱을 열거나 다시 화면으로 돌아올 때, 하루에 한 번만 알림
+        async function checkExpiryNotifications() {
+            try {
+                if (!notiEnabled()) return;
+                const today = getTodayString();
+                if (localStorage.getItem(NOTI_LAST_KEY) === today) return;
+                const alerts = getExpiryAlerts();
+                if (!alerts.length) return;
+                await sendExpiryNotification(alerts);
+                localStorage.setItem(NOTI_LAST_KEY, today);
+            } catch (e) { /* 알림 실패는 조용히 무시 (배너는 그대로 보임) */ }
+        }
+
+        async function toggleNotifications() {
+            const at = getAlertT();
+            if (!notiSupported()) { showToast(at.notiUnsupported); return; }
+            if (Notification.permission === 'denied') { showToast(at.notiDenied); return; }
+
+            if (notiEnabled()) {
+                localStorage.setItem(NOTI_PREF_KEY, '0');
+                unregisterPeriodicSync();
+                updateBellUI(); syncStateToSW();
+                showToast(at.notiOff);
+                return;
+            }
+
+            let perm = Notification.permission;
+            if (perm !== 'granted') perm = await Notification.requestPermission();
+            if (perm !== 'granted') { updateBellUI(); showToast(at.notiDenied); return; }
+
+            localStorage.setItem(NOTI_PREF_KEY, '1');
+            updateBellUI(); syncStateToSW();
+            try {
+                const reg = await getSwRegistration();
+                registerPeriodicSync(reg);
+            } catch (e) { showToast(at.notiUnsupported); return; }
+            showToast(at.notiOn);
+
+            const alerts = getExpiryAlerts();
+            if (alerts.length) {
+                try { await sendExpiryNotification(alerts); localStorage.setItem(NOTI_LAST_KEY, getTodayString()); } catch (e) { /* 무시 */ }
+            }
+        }
+
+        function initNotifications() {
+            updateBellUI();
+            syncStateToSW();
+            if (notiEnabled()) {
+                getSwRegistration().then(registerPeriodicSync).catch(() => {});
+                checkExpiryNotifications();
+            }
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState !== 'visible') return;
+                renderFoodList();            // 자정이 지나 D-day가 바뀌었을 수 있으니 다시 계산
+                checkExpiryNotifications();
+            });
+        }
+
         /* 초기 언어 설정 적용 */
         changeLanguage('KR');
         switchSection('all');
+        initNotifications();
     </script>
 </body>
 </html>
