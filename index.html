@@ -99,14 +99,14 @@
 
     <!-- 글로벌 헤더 -->
     <header class="bg-white text-slate-900 py-3 border-b border-slate-200 shadow-xs sticky top-0 z-50 flex justify-between items-center px-4 max-w-md mx-auto w-full">
-        <h1 onclick="openBrandStoryModal()" class="text-lg font-black tracking-tight text-slate-900 flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition" title="브랜드 스토리 보기">
+        <h1 onclick="openBrandStoryModal()" class="text-lg font-black tracking-tight text-slate-900 flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition flex-shrink-0 whitespace-nowrap" title="브랜드 스토리 보기">
             <span class="naver-green-text font-black text-2xl">iomma</span>
             <span class="text-sm font-bold text-slate-500">for FUDI ✨</span>
         </h1>
-        <div class="flex items-center gap-1.5">
-            <button id="noti-bell-btn" onclick="toggleNotifications()" class="text-base leading-none w-8 h-8 rounded-xl border flex items-center justify-center transition bg-slate-100 border-slate-300" title="" aria-label="">🔕</button>
-            <span class="text-sm">🌐</span>
-            <select id="lang-select" onchange="changeLanguage(this.value)" class="text-sm bg-slate-100 font-bold px-2 py-1 rounded-xl border border-slate-300 focus:outline-none text-slate-800">
+        <div class="flex items-center gap-1.5 min-w-0">
+            <button id="noti-bell-btn" onclick="toggleNotifications()" class="text-base leading-none w-8 h-8 flex-shrink-0 rounded-xl border flex items-center justify-center transition bg-slate-100 border-slate-300" title="" aria-label="">🔕</button>
+            <span class="text-sm flex-shrink-0">🌐</span>
+            <select id="lang-select" onchange="changeLanguage(this.value)" class="text-sm min-w-0 w-[104px] bg-slate-100 font-bold px-2 py-1 rounded-xl border border-slate-300 focus:outline-none text-slate-800">
                 <option value="KR">🇰🇷 한국어</option>
                 <option value="EN">🇺🇸 English</option>
                 <option value="ES">🇪🇸 Español</option>
@@ -1322,7 +1322,7 @@
             btn.title = on ? at.bellTitleOn : at.bellTitleOff;
             btn.setAttribute('aria-label', btn.title);
             btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-            btn.className = 'text-base leading-none w-8 h-8 rounded-xl border flex items-center justify-center transition ' + (on ? 'bg-emerald-50 border-emerald-400' : 'bg-slate-100 border-slate-300');
+            btn.className = 'text-base leading-none w-8 h-8 flex-shrink-0 rounded-xl border flex items-center justify-center transition ' + (on ? 'bg-emerald-50 border-emerald-400' : 'bg-slate-100 border-slate-300');
         }
 
         // 서비스 워커(sw.js)는 localStorage를 못 읽으므로 IndexedDB에 사본을 둔다.
