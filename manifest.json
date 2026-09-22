@@ -1,6 +1,6 @@
 {
-  "name": "이오마 - 엄마의 사랑이 담긴 스마트 냉장고",
-  "short_name": "이오마",
+  "name": "냉장고 - 엄마의 사랑이 담긴 스마트 냉장고",
+  "short_name": "냉장고",
   "description": "엄마의 사랑이 담긴 스마트 냉장고 관리 시스템",
   "start_url": "./index.html",
   "display": "standalone",
@@ -8,12 +8,12 @@
   "theme_color": "#03C75A",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3081/3081559.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
