@@ -130,17 +130,9 @@
                         엄마 마음의 냉장고 관리 시스템
                     </h2>
                 </div>
-                <div class="flex flex-col gap-1.5 bg-slate-50 p-1.5 rounded-2xl border border-slate-200">
-                    <div class="grid grid-cols-4 gap-1">
-                        <button onclick="switchSection('freezer')" id="tab-freezer" class="tab-btn text-center rounded-xl transition duration-150 truncate">냉동실</button>
-                        <button onclick="switchSection('fridge')" id="tab-fridge" class="tab-btn text-center rounded-xl transition duration-150 truncate">냉장실</button>
-                        <button onclick="switchSection('vegetable')" id="tab-vegetable" class="tab-btn text-center rounded-xl transition duration-150 truncate">야채칸</button>
-                        <button onclick="switchSection('beverage')" id="tab-beverage" class="tab-btn text-center rounded-xl transition duration-150 truncate">음료/양념</button>
-                    </div>
-                    <button onclick="switchSection('all')" id="tab-all" class="tab-all tab-btn w-full py-2.5 text-sm rounded-xl border transition duration-150 font-black">
-                        👑 냉장고 속 전체보기
-                    </button>
-                </div>
+                <button onclick="switchSection('all')" id="tab-all" class="tab-all tab-btn w-full py-2.5 text-sm rounded-xl border transition duration-150 font-black">
+                    👑 냉장고 속 전체보기
+                </button>
             </div>
         </div>
 
@@ -152,21 +144,21 @@
         <!-- 현황판 -->
         <section class="max-w-md mx-auto mt-2.5 px-3">
             <div class="bg-white p-2 rounded-2xl shadow-xs border-2 border-slate-200 grid grid-cols-4 gap-1.5 text-center">
-                <button onclick="switchSection('freezer')" id="count-box-freezer" class="py-2 px-1 rounded-xl transition text-center flex flex-col items-center justify-center bg-blue-50/80 min-w-0">
-                    <div id="ui-count-label-freezer" class="text-[12px] font-black text-blue-700 truncate w-full">❄️ 냉동실</div>
-                    <div id="count-freezer" class="text-sm font-black text-blue-950 mt-0.5">0개</div>
+                <button onclick="switchSection('freezer')" id="count-box-freezer" class="p-1.5 rounded-2xl transition flex flex-col items-center gap-1 bg-blue-50/80 min-w-0">
+                    <div id="ui-count-label-freezer" class="text-[12px] font-black text-white bg-blue-600 rounded-lg py-1 w-full truncate" style="box-shadow: inset 0 1.5px 2px rgba(0,0,0,0.35);">❄️ 냉동실</div>
+                    <div id="count-freezer" class="text-[15px] font-black text-blue-950">0개</div>
                 </button>
-                <button onclick="switchSection('fridge')" id="count-box-fridge" class="py-2 px-1 rounded-xl transition text-center flex flex-col items-center justify-center bg-cyan-50/80 min-w-0">
-                    <div id="ui-count-label-fridge" class="text-[12px] font-black text-cyan-800 truncate w-full">💧 냉장실</div>
-                    <div id="count-fridge" class="text-sm font-black text-cyan-950 mt-0.5">0개</div>
+                <button onclick="switchSection('fridge')" id="count-box-fridge" class="p-1.5 rounded-2xl transition flex flex-col items-center gap-1 bg-cyan-50/80 min-w-0">
+                    <div id="ui-count-label-fridge" class="text-[12px] font-black text-white bg-cyan-600 rounded-lg py-1 w-full truncate" style="box-shadow: inset 0 1.5px 2px rgba(0,0,0,0.35);">💧 냉장실</div>
+                    <div id="count-fridge" class="text-[15px] font-black text-cyan-950">0개</div>
                 </button>
-                <button onclick="switchSection('vegetable')" id="count-box-vegetable" class="py-2 px-1 rounded-xl transition text-center flex flex-col items-center justify-center bg-pink-50/80 min-w-0">
-                    <div id="ui-count-label-vegetable" class="text-[12px] font-black text-pink-700 truncate w-full">🌿 야채칸</div>
-                    <div id="count-vegetable" class="text-sm font-black text-pink-950 mt-0.5">0개</div>
+                <button onclick="switchSection('vegetable')" id="count-box-vegetable" class="p-1.5 rounded-2xl transition flex flex-col items-center gap-1 bg-pink-50/80 min-w-0">
+                    <div id="ui-count-label-vegetable" class="text-[12px] font-black text-white bg-pink-600 rounded-lg py-1 w-full truncate" style="box-shadow: inset 0 1.5px 2px rgba(0,0,0,0.35);">🌿 야채칸</div>
+                    <div id="count-vegetable" class="text-[15px] font-black text-pink-950">0개</div>
                 </button>
-                <button onclick="switchSection('beverage')" id="count-box-beverage" class="py-2 px-1 rounded-xl transition text-center flex flex-col items-center justify-center bg-purple-50/80 min-w-0">
-                    <div id="ui-count-label-beverage" class="text-[12px] font-black text-purple-800 truncate w-full">🥤 음료양념</div>
-                    <div id="count-beverage" class="text-sm font-black text-purple-950 mt-0.5">0개</div>
+                <button onclick="switchSection('beverage')" id="count-box-beverage" class="p-1.5 rounded-2xl transition flex flex-col items-center gap-1 bg-purple-50/80 min-w-0">
+                    <div id="ui-count-label-beverage" class="text-[12px] font-black text-white bg-purple-600 rounded-lg py-1 w-full truncate" style="box-shadow: inset 0 1.5px 2px rgba(0,0,0,0.35);">🥤 음료양념</div>
+                    <div id="count-beverage" class="text-[15px] font-black text-purple-950">0개</div>
                 </button>
             </div>
         </section>
@@ -736,10 +728,6 @@
             document.getElementById('ui-system-tag').innerText = t.systemTag;
             document.getElementById('ui-main-title').innerHTML = t.mainTitle;
 
-            document.getElementById('tab-freezer').innerText = t.freezer;
-            document.getElementById('tab-fridge').innerText = t.fridge;
-            document.getElementById('tab-vegetable').innerText = t.vegetable;
-            document.getElementById('tab-beverage').innerText = t.beverage;
             document.getElementById('tab-all').innerText = t.all;
 
             document.getElementById('ui-input-header').innerText = t.newRegHeader;
@@ -850,10 +838,10 @@
             lblVegetable.innerText = "🌿 " + t.vegetable;
             lblBeverage.innerText = "🥤 " + t.beverage;
 
-            boxFreezer.className = "py-2 px-1 rounded-xl transition text-center flex flex-col items-center justify-center bg-blue-50/80 min-w-0 " + (section === 'freezer' ? "border-2 border-blue-600 ring-2 ring-blue-200" : "border border-blue-200");
-            boxFridge.className = "py-2 px-1 rounded-xl transition text-center flex flex-col items-center justify-center bg-cyan-50/80 min-w-0 " + (section === 'fridge' ? "border-2 border-cyan-600 ring-2 ring-cyan-200" : "border border-cyan-200");
-            boxVegetable.className = "py-2 px-1 rounded-xl transition text-center flex flex-col items-center justify-center bg-pink-50/80 min-w-0 " + (section === 'vegetable' ? "border-2 border-pink-600 ring-2 ring-pink-200" : "border border-pink-200");
-            boxBeverage.className = "py-2 px-1 rounded-xl transition text-center flex flex-col items-center justify-center bg-purple-50/80 min-w-0 " + (section === 'beverage' ? "border-2 border-purple-600 ring-2 ring-purple-200" : "border border-purple-200");
+            boxFreezer.className = "p-1.5 rounded-2xl transition flex flex-col items-center gap-1 bg-blue-50/80 min-w-0 " + (section === 'freezer' ? "border-2 border-blue-600 ring-2 ring-blue-200" : "border border-blue-200");
+            boxFridge.className = "p-1.5 rounded-2xl transition flex flex-col items-center gap-1 bg-cyan-50/80 min-w-0 " + (section === 'fridge' ? "border-2 border-cyan-600 ring-2 ring-cyan-200" : "border border-cyan-200");
+            boxVegetable.className = "p-1.5 rounded-2xl transition flex flex-col items-center gap-1 bg-pink-50/80 min-w-0 " + (section === 'vegetable' ? "border-2 border-pink-600 ring-2 ring-pink-200" : "border border-pink-200");
+            boxBeverage.className = "p-1.5 rounded-2xl transition flex flex-col items-center gap-1 bg-purple-50/80 min-w-0 " + (section === 'beverage' ? "border-2 border-purple-600 ring-2 ring-purple-200" : "border border-purple-200");
 
             mainCard.className = "rounded-2xl shadow-xs p-3 border-2 transition-all duration-300 ";
 
@@ -866,29 +854,22 @@
 
         function switchSection(section) {
             currentSection = section;
-            ['freezer', 'fridge', 'vegetable', 'beverage', 'all'].forEach(s => {
-                const btn = document.getElementById(`tab-${s}`);
-                btn.className = s === 'all' ? "tab-all tab-btn w-full py-2.5 text-sm rounded-xl border transition duration-150 font-black" : "tab-btn text-center rounded-xl transition duration-150 truncate";
-            });
+            document.getElementById('tab-all').className = "tab-all tab-btn w-full py-2.5 text-sm rounded-xl border transition duration-150 font-black" + (section === 'all' ? " active-all" : "");
 
             const submitBtn = document.getElementById('input-submit-btn');
             const targetTitle = document.getElementById('input-target-title');
             const t = i18n[currentLang] || i18n['KR'];
 
             if (section === 'freezer') {
-                document.getElementById('tab-freezer').classList.add('active-freezer');
                 submitBtn.className = "w-full py-2.5 text-sm font-black rounded-xl transition shadow-xs btn-freezer";
                 targetTitle.innerText = t.freezer;
             } else if (section === 'fridge') {
-                document.getElementById('tab-fridge').classList.add('active-fridge');
                 submitBtn.className = "w-full py-2.5 text-sm font-black rounded-xl transition shadow-xs btn-fridge";
                 targetTitle.innerText = t.fridge;
             } else if (section === 'vegetable') {
-                document.getElementById('tab-vegetable').classList.add('active-vegetable');
                 submitBtn.className = "w-full py-2.5 text-sm font-black rounded-xl transition shadow-xs btn-vegetable";
                 targetTitle.innerText = t.vegetable;
             } else if (section === 'beverage') {
-                document.getElementById('tab-beverage').classList.add('active-beverage');
                 submitBtn.className = "w-full py-2.5 text-sm font-black rounded-xl transition shadow-xs btn-beverage";
                 targetTitle.innerText = t.beverage;
             } else {
@@ -1286,17 +1267,17 @@
         try { quickPresets = JSON.parse(localStorage.getItem(QUICK_PRESET_KEY) || '[]'); } catch (e) { quickPresets = []; }
 
         const quickPresetI18n = {
-            KR: { label: "자주 쓰는 재료", days: "일", checkbox: "⚡ 이 재료, 다음에도 한 번에 넣게 빠른 버튼으로 저장", deleteConfirm: n => `⚡ [iomma]\n"${n}" 빠른 버튼을 지울까요?` },
-            EN: { label: "Quick add", days: "d", checkbox: "⚡ Save this as a quick-add button for next time", deleteConfirm: n => `⚡ [iomma]\nRemove the "${n}" quick-add button?` },
-            ES: { label: "Añadir rápido", days: "d", checkbox: "⚡ Guardar como botón de acceso rápido", deleteConfirm: n => `⚡ [iomma]\n¿Eliminar el botón rápido "${n}"?` },
-            ZH: { label: "快速添加", days: "天", checkbox: "⚡ 保存为快速添加按钮", deleteConfirm: n => `⚡ [iomma]\n删除快速按钮"${n}"吗？` },
-            TH: { label: "เพิ่มด่วน", days: "วัน", checkbox: "⚡ บันทึกเป็นปุ่มเพิ่มด่วนสำหรับครั้งต่อไป", deleteConfirm: n => `⚡ [iomma]\nลบปุ่มด่วน "${n}" หรือไม่?` },
-            FR: { label: "Ajout rapide", days: "j", checkbox: "⚡ Enregistrer comme bouton d'ajout rapide", deleteConfirm: n => `⚡ [iomma]\nSupprimer le bouton rapide "${n}" ?` },
-            JP: { label: "よく使う食材", days: "日", checkbox: "⚡ 次回もすぐ使えるようにクイックボタンとして保存", deleteConfirm: n => `⚡ [iomma]\n「${n}」のクイックボタンを削除しますか？` },
-            DE: { label: "Schnell hinzufügen", days: "T", checkbox: "⚡ Als Schnellzugriff-Button speichern", deleteConfirm: n => `⚡ [iomma]\nSchnellzugriff-Button "${n}" löschen?` },
-            RU: { label: "Быстрое добавление", days: "дн", checkbox: "⚡ Сохранить как кнопку быстрого добавления", deleteConfirm: n => `⚡ [iomma]\nУдалить кнопку быстрого добавления "${n}"?` },
-            VI: { label: "Thêm nhanh", days: "ngày", checkbox: "⚡ Lưu làm nút thêm nhanh cho lần sau", deleteConfirm: n => `⚡ [iomma]\nXóa nút thêm nhanh "${n}"?` },
-            ID: { label: "Tambah cepat", days: "hr", checkbox: "⚡ Simpan sebagai tombol tambah cepat", deleteConfirm: n => `⚡ [iomma]\nHapus tombol cepat "${n}"?` }
+            KR: { label: "자주 쓰는 재료", days: "일", checkbox: "⚡ 이 재료, 다음에도 한 번에 넣게 빠른 버튼으로 저장", deleteConfirm: n => `⚡ [iomma]\n"${n}" 빠른 버튼을 지울까요?`, moveTo: s => `↪ ${s}로 이동` },
+            EN: { label: "Quick add", days: "d", checkbox: "⚡ Save this as a quick-add button for next time", deleteConfirm: n => `⚡ [iomma]\nRemove the "${n}" quick-add button?`, moveTo: s => `↪ Switches to ${s}` },
+            ES: { label: "Añadir rápido", days: "d", checkbox: "⚡ Guardar como botón de acceso rápido", deleteConfirm: n => `⚡ [iomma]\n¿Eliminar el botón rápido "${n}"?`, moveTo: s => `↪ Cambia a ${s}` },
+            ZH: { label: "快速添加", days: "天", checkbox: "⚡ 保存为快速添加按钮", deleteConfirm: n => `⚡ [iomma]\n删除快速按钮"${n}"吗？`, moveTo: s => `↪ 切换到${s}` },
+            TH: { label: "เพิ่มด่วน", days: "วัน", checkbox: "⚡ บันทึกเป็นปุ่มเพิ่มด่วนสำหรับครั้งต่อไป", deleteConfirm: n => `⚡ [iomma]\nลบปุ่มด่วน "${n}" หรือไม่?`, moveTo: s => `↪ ย้ายไปที่${s}` },
+            FR: { label: "Ajout rapide", days: "j", checkbox: "⚡ Enregistrer comme bouton d'ajout rapide", deleteConfirm: n => `⚡ [iomma]\nSupprimer le bouton rapide "${n}" ?`, moveTo: s => `↪ Passe à ${s}` },
+            JP: { label: "よく使う食材", days: "日", checkbox: "⚡ 次回もすぐ使えるようにクイックボタンとして保存", deleteConfirm: n => `⚡ [iomma]\n「${n}」のクイックボタンを削除しますか？`, moveTo: s => `↪ ${s}に切り替え` },
+            DE: { label: "Schnell hinzufügen", days: "T", checkbox: "⚡ Als Schnellzugriff-Button speichern", deleteConfirm: n => `⚡ [iomma]\nSchnellzugriff-Button "${n}" löschen?`, moveTo: s => `↪ Wechselt zu ${s}` },
+            RU: { label: "Быстрое добавление", days: "дн", checkbox: "⚡ Сохранить как кнопку быстрого добавления", deleteConfirm: n => `⚡ [iomma]\nУдалить кнопку быстрого добавления "${n}"?`, moveTo: s => `↪ Переключит на ${s}` },
+            VI: { label: "Thêm nhanh", days: "ngày", checkbox: "⚡ Lưu làm nút thêm nhanh cho lần sau", deleteConfirm: n => `⚡ [iomma]\nXóa nút thêm nhanh "${n}"?`, moveTo: s => `↪ Chuyển sang ${s}` },
+            ID: { label: "Tambah cepat", days: "hr", checkbox: "⚡ Simpan sebagai tombol tambah cepat", deleteConfirm: n => `⚡ [iomma]\nHapus tombol cepat "${n}"?`, moveTo: s => `↪ Pindah ke ${s}` }
         };
         function qpT() { return quickPresetI18n[currentLang] || quickPresetI18n.KR; }
 
@@ -1328,16 +1309,24 @@
             if (!quickPresets.length) { row.classList.add('hidden'); row.innerHTML = ''; return; }
 
             const qi = qpT();
+            const t = i18n[currentLang] || i18n['KR'];
+            const targetSec = currentSection === 'all' ? 'freezer' : currentSection;
             row.innerHTML = `
                 <p style="font-size:12px;color:#64748b;margin:0 0 6px;font-weight:700;">⚡ ${escHtml(qi.label)}</p>
                 <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
-                    ${quickPresets.map((qp, idx) => `
+                    ${quickPresets.map((qp, idx) => {
+                        const sectionLabel = escHtml(t[qp.section] || qp.section);
+                        const isOtherSection = qp.section !== targetSec;
+                        const subline = isOtherSection
+                            ? `<span style="display:block;font-size:11px;font-weight:700;color:#c2410c;">${escHtml(qi.moveTo(t[qp.section] || qp.section))} · ${qp.days}${escHtml(qi.days)}</span>`
+                            : `<span style="display:block;font-size:11px;color:#64748b;">${sectionLabel} · ${qp.days}${escHtml(qi.days)}</span>`;
+                        return `
                         <button type="button" class="qp-chip" data-idx="${idx}"
-                            style="text-align:left;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;">
+                            style="text-align:left;padding:8px 10px;border:1px solid ${isOtherSection ? '#fdba74' : '#cbd5e1'};border-radius:10px;background:${isOtherSection ? '#fff7ed' : '#f8fafc'};">
                             <span style="display:block;font-size:13px;font-weight:800;color:#1e293b;">${escHtml(qp.name)}</span>
-                            <span style="display:block;font-size:11px;color:#64748b;">${escHtml((i18n[currentLang]||i18n['KR'])[qp.section] || qp.section)} · ${qp.days}${escHtml(qi.days)}</span>
+                            ${subline}
                         </button>
-                    `).join('')}
+                    `;}).join('')}
                 </div>
             `;
             row.classList.remove('hidden');
