@@ -1387,9 +1387,9 @@
         }
 
         const memoryOfDayLabel = {
-            KR: "오늘의 기억", EN: "Today's memory", ES: "Recuerdo de hoy", ZH: "今日回忆", TH: "ความทรงจำวันนี้",
-            FR: "Souvenir du jour", JP: "今日の思い出", DE: "Erinnerung des Tages", RU: "Воспоминание дня",
-            VI: "Kỷ niệm hôm nay", ID: "Kenangan hari ini"
+            KR: "냉장고 속 추억", EN: "Memories in the fridge", ES: "Recuerdos en la nevera", ZH: "冰箱里的回忆", TH: "ความทรงจำในตู้เย็น",
+            FR: "Souvenirs du frigo", JP: "冷蔵庫の思い出", DE: "Erinnerungen im Kühlschrank", RU: "Воспоминания из холодильника",
+            VI: "Kỷ niệm trong tủ lạnh", ID: "Kenangan di kulkas"
         };
 
         function formatAlertMsg(a, at) {
@@ -1437,19 +1437,20 @@
             const pool = [];
             Object.keys(memoryHistory).forEach(name => {
                 (memoryHistory[name] || []).forEach(h => {
-                    if (h.text) pool.push({ name, text: h.text });
+                    if (h.text) pool.push({ name, text: h.text, date: h.date });
                 });
             });
 
             if (!pool.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
 
             const pick = pool[Math.floor(Math.random() * pool.length)];
+            const meta = pick.date ? `${escHtml(pick.name)} · ${escHtml(pick.date)}` : escHtml(pick.name);
 
             box.innerHTML = `
                 <div style="background:linear-gradient(135deg,#FADCD2,#EFC0B3);border:1px solid #F5CCC0;border-radius:14px;padding:12px 14px;">
                     <div style="font-size:11px;font-weight:900;color:#A35741;margin-bottom:4px;">🌸 ${escHtml(memoryOfDayLabel[currentLang] || memoryOfDayLabel.KR)}</div>
                     <div style="font-size:13px;font-weight:700;color:#4A1B0C;line-height:1.4;word-break:break-word;">"${escHtml(pick.text)}"</div>
-                    <div style="font-size:10px;color:#7D3E2F;margin-top:3px;">${escHtml(pick.name)}</div>
+                    <div style="font-size:10px;color:#7D3E2F;margin-top:3px;">${meta}</div>
                 </div>
             `;
             box.classList.remove('hidden');
