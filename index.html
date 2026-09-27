@@ -144,6 +144,11 @@
             </div>
         </div>
 
+        <!-- 오늘의 기억 (메모가 있을 때만 조용히 보임) -->
+        <section class="max-w-md mx-auto mt-2.5 px-3">
+            <div id="memory-of-the-day" class="hidden"></div>
+        </section>
+
         <!-- 현황판 -->
         <section class="max-w-md mx-auto mt-2.5 px-3">
             <div class="bg-white p-2 rounded-2xl shadow-xs border-2 border-slate-200 grid grid-cols-4 gap-1.5 text-center">
@@ -181,6 +186,7 @@
                 </div>
 
                 <div class="space-y-2.5">
+                    <div id="quick-preset-row" class="hidden"></div>
                     <div>
                         <input type="text" id="new-food-name" placeholder="식재료 명칭 (예: 삼겹살, 복숭아)" class="input-styled w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none bg-slate-50 text-slate-900 font-bold transition">
                     </div>
@@ -208,6 +214,11 @@
                         <label id="ui-label-direct-memo" class="block text-sm text-emerald-900 font-black mb-1">✍️ 이 음식의 추억 / 레시피 메모</label>
                         <textarea id="new-food-direct-note" rows="2" placeholder="음식에 담긴 소중한 추억이나 나만의 레시피를 자유롭게 적어보세요..." class="input-styled w-full p-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none text-slate-900 font-bold leading-relaxed transition"></textarea>
                     </div>
+
+                    <label class="flex items-center gap-2 text-[13px] font-bold text-slate-700 select-none py-0.5">
+                        <input type="checkbox" id="new-food-quick-preset" class="w-4 h-4">
+                        <span id="ui-quick-preset-checkbox-label"></span>
+                    </label>
 
                     <button onclick="addFoodItem()" id="input-submit-btn" class="w-full py-2.5 text-sm font-black rounded-xl transition shadow-xs naver-green-bg text-white">식재료 투입</button>
                 </div>
@@ -781,7 +792,9 @@
             updateSummaryBoxHighlight(currentSection);
             updateSummaryCounts();
             updateSubLocationOptions('new-sub-location', currentSection);
+            document.getElementById('ui-quick-preset-checkbox-label').innerText = qpT().checkbox;
             renderFoodList();
+            renderQuickPresets();
         }
 
         function toggleInputForm() {
@@ -982,6 +995,12 @@
                 if (!memoryHistory[name]) { memoryHistory[name] = []; }
                 memoryHistory[name].unshift({ date: inputDate, text: directNote });
             }
+
+            const wantsQuickPreset = document.getElementById('new-food-quick-preset').checked;
+            if (wantsQuickPreset) {
+                saveOrUpdateQuickPreset(name, targetSec, subLoc, diffDays(inputDate, expiryDate));
+            }
+            document.getElementById('new-food-quick-preset').checked = false;
 
             document.getElementById('new-food-name').value = '';
             document.getElementById('new-food-direct-note').value = '';
@@ -1260,6 +1279,130 @@
 
         function getAlertT() { return alertI18n[currentLang] || alertI18n['KR']; }
 
+        /* ⚡ [빠른 등록 버튼] — 설정 화면 없이, 재료 저장할 때 체크 한 번으로 자연스럽게 생기고
+           같은 이름으로 다시 저장하면 갱신(=수정), 칩을 길게 누르면 삭제. */
+        const QUICK_PRESET_KEY = 'quickPresetsKey_iomma_v60';
+        let quickPresets = [];
+        try { quickPresets = JSON.parse(localStorage.getItem(QUICK_PRESET_KEY) || '[]'); } catch (e) { quickPresets = []; }
+
+        const quickPresetI18n = {
+            KR: { label: "자주 쓰는 재료", days: "일", checkbox: "⚡ 이 재료, 다음에도 한 번에 넣게 빠른 버튼으로 저장", deleteConfirm: n => `⚡ [iomma]\n"${n}" 빠른 버튼을 지울까요?` },
+            EN: { label: "Quick add", days: "d", checkbox: "⚡ Save this as a quick-add button for next time", deleteConfirm: n => `⚡ [iomma]\nRemove the "${n}" quick-add button?` },
+            ES: { label: "Añadir rápido", days: "d", checkbox: "⚡ Guardar como botón de acceso rápido", deleteConfirm: n => `⚡ [iomma]\n¿Eliminar el botón rápido "${n}"?` },
+            ZH: { label: "快速添加", days: "天", checkbox: "⚡ 保存为快速添加按钮", deleteConfirm: n => `⚡ [iomma]\n删除快速按钮"${n}"吗？` },
+            TH: { label: "เพิ่มด่วน", days: "วัน", checkbox: "⚡ บันทึกเป็นปุ่มเพิ่มด่วนสำหรับครั้งต่อไป", deleteConfirm: n => `⚡ [iomma]\nลบปุ่มด่วน "${n}" หรือไม่?` },
+            FR: { label: "Ajout rapide", days: "j", checkbox: "⚡ Enregistrer comme bouton d'ajout rapide", deleteConfirm: n => `⚡ [iomma]\nSupprimer le bouton rapide "${n}" ?` },
+            JP: { label: "よく使う食材", days: "日", checkbox: "⚡ 次回もすぐ使えるようにクイックボタンとして保存", deleteConfirm: n => `⚡ [iomma]\n「${n}」のクイックボタンを削除しますか？` },
+            DE: { label: "Schnell hinzufügen", days: "T", checkbox: "⚡ Als Schnellzugriff-Button speichern", deleteConfirm: n => `⚡ [iomma]\nSchnellzugriff-Button "${n}" löschen?` },
+            RU: { label: "Быстрое добавление", days: "дн", checkbox: "⚡ Сохранить как кнопку быстрого добавления", deleteConfirm: n => `⚡ [iomma]\nУдалить кнопку быстрого добавления "${n}"?` },
+            VI: { label: "Thêm nhanh", days: "ngày", checkbox: "⚡ Lưu làm nút thêm nhanh cho lần sau", deleteConfirm: n => `⚡ [iomma]\nXóa nút thêm nhanh "${n}"?` },
+            ID: { label: "Tambah cepat", days: "hr", checkbox: "⚡ Simpan sebagai tombol tambah cepat", deleteConfirm: n => `⚡ [iomma]\nHapus tombol cepat "${n}"?` }
+        };
+        function qpT() { return quickPresetI18n[currentLang] || quickPresetI18n.KR; }
+
+        function saveQuickPresets() {
+            localStorage.setItem(QUICK_PRESET_KEY, JSON.stringify(quickPresets));
+        }
+
+        // 날짜 문자열 두 개의 차이를 일(day) 단위로. getDaysLeft와 같은 로컬 날짜 파싱 방식.
+        function diffDays(fromStr, toStr) {
+            const pa = String(fromStr || '').split('-').map(Number);
+            const pb = String(toStr || '').split('-').map(Number);
+            if (pa.length !== 3 || pb.length !== 3) return 3;
+            const a = new Date(pa[0], pa[1] - 1, pa[2]);
+            const b = new Date(pb[0], pb[1] - 1, pb[2]);
+            return Math.max(0, Math.round((b - a) / (1000 * 60 * 60 * 24)));
+        }
+
+        function saveOrUpdateQuickPreset(name, section, subLocation, days) {
+            const idx = quickPresets.findIndex(p => p.name === name);
+            const preset = { name, section, subLocation, days };
+            if (idx >= 0) quickPresets[idx] = preset; else quickPresets.push(preset);
+            saveQuickPresets();
+            renderQuickPresets();
+        }
+
+        function renderQuickPresets() {
+            const row = document.getElementById('quick-preset-row');
+            if (!row) return;
+            if (!quickPresets.length) { row.classList.add('hidden'); row.innerHTML = ''; return; }
+
+            const qi = qpT();
+            row.innerHTML = `
+                <p style="font-size:12px;color:#64748b;margin:0 0 6px;font-weight:700;">⚡ ${escHtml(qi.label)}</p>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+                    ${quickPresets.map((qp, idx) => `
+                        <button type="button" class="qp-chip" data-idx="${idx}"
+                            style="text-align:left;padding:8px 10px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;">
+                            <span style="display:block;font-size:13px;font-weight:800;color:#1e293b;">${escHtml(qp.name)}</span>
+                            <span style="display:block;font-size:11px;color:#64748b;">${escHtml((i18n[currentLang]||i18n['KR'])[qp.section] || qp.section)} · ${qp.days}${escHtml(qi.days)}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            row.classList.remove('hidden');
+            wireQuickPresetChips();
+        }
+
+        function wireQuickPresetChips() {
+            document.querySelectorAll('.qp-chip').forEach(chip => {
+                const idx = Number(chip.getAttribute('data-idx'));
+                let timer, longPressed;
+                const start = () => {
+                    longPressed = false;
+                    timer = setTimeout(() => { longPressed = true; deleteQuickPreset(idx); }, 550);
+                };
+                const cancel = () => clearTimeout(timer);
+                chip.addEventListener('pointerdown', start);
+                chip.addEventListener('pointerup', cancel);
+                chip.addEventListener('pointerleave', cancel);
+                chip.addEventListener('click', (e) => {
+                    if (longPressed) { e.preventDefault(); return; }
+                    applyQuickPreset(idx);
+                });
+            });
+        }
+
+        function deleteQuickPreset(idx) {
+            const qp = quickPresets[idx];
+            if (!qp) return;
+            if (!confirm(qpT().deleteConfirm(qp.name))) return;
+            quickPresets.splice(idx, 1);
+            saveQuickPresets();
+            renderQuickPresets();
+        }
+
+        function applyQuickPreset(idx) {
+            const qp = quickPresets[idx];
+            if (!qp) return;
+
+            if (currentSection !== qp.section) switchSection(qp.section);
+            updateSubLocationOptions('new-sub-location', qp.section, qp.subLocation);
+
+            document.getElementById('new-food-name').value = qp.name;
+            const today = getTodayString();
+            const [y, m, d] = today.split('-').map(Number);
+            const expiry = new Date(y, m - 1, d);
+            expiry.setDate(expiry.getDate() + qp.days);
+            const expiryStr = expiry.getFullYear() + '-' + String(expiry.getMonth() + 1).padStart(2, '0') + '-' + String(expiry.getDate()).padStart(2, '0');
+            document.getElementById('new-input-date').value = today;
+            document.getElementById('new-expiry-date').value = expiryStr;
+
+            const form = document.getElementById('input-container');
+            form.classList.remove('hidden');
+            const prevBg = form.style.backgroundColor;
+            form.style.transition = 'background-color .3s';
+            form.style.backgroundColor = '#ecfdf5';
+            setTimeout(() => { form.style.backgroundColor = prevBg || ''; }, 400);
+            document.getElementById('new-food-name').focus();
+        }
+
+        const memoryOfDayLabel = {
+            KR: "오늘의 기억", EN: "Today's memory", ES: "Recuerdo de hoy", ZH: "今日回忆", TH: "ความทรงจำวันนี้",
+            FR: "Souvenir du jour", JP: "今日の思い出", DE: "Erinnerung des Tages", RU: "Воспоминание дня",
+            VI: "Kỷ niệm hôm nay", ID: "Kenangan hari ini"
+        };
+
         function formatAlertMsg(a, at) {
             const tpl = a.daysLeft < 0 ? at.msgExpired : (a.daysLeft === 0 ? at.msgToday : at.msgSoon);
             return tpl.replace('{name}', () => a.name).replace('{n}', () => Math.abs(a.daysLeft));
@@ -1293,6 +1436,33 @@
                     ${shown.map(a => `<li class="text-[13px] font-bold ${a.daysLeft < 0 ? 'text-rose-900' : 'text-amber-900'}">• ${escHtml(formatAlertMsg(a, at))}</li>`).join('')}
                     ${rest > 0 ? `<li class="text-[12px] font-bold text-slate-600">${escHtml(at.msgMore.replace('{n}', () => rest))}</li>` : ''}
                 </ul>`;
+            box.classList.remove('hidden');
+        }
+
+        /* 🌸 [오늘의 기억] — memoryHistory에 쌓인 가족 이야기 중 하나를 방문마다 조용히 하나씩 보여줌.
+           메모가 하나도 없으면 카드를 통째로 숨김. 클릭 등 별도 동작 없음 (부담 없이 보고 지나가는 용도). */
+        function renderMemoryOfTheDay() {
+            const box = document.getElementById('memory-of-the-day');
+            if (!box) return;
+
+            const pool = [];
+            Object.keys(memoryHistory).forEach(name => {
+                (memoryHistory[name] || []).forEach(h => {
+                    if (h.text) pool.push({ name, text: h.text });
+                });
+            });
+
+            if (!pool.length) { box.classList.add('hidden'); box.innerHTML = ''; return; }
+
+            const pick = pool[Math.floor(Math.random() * pool.length)];
+
+            box.innerHTML = `
+                <div style="background:linear-gradient(135deg,#FADCD2,#EFC0B3);border:1px solid #F5CCC0;border-radius:14px;padding:12px 14px;">
+                    <div style="font-size:11px;font-weight:900;color:#A35741;margin-bottom:4px;">🌸 ${escHtml(memoryOfDayLabel[currentLang] || memoryOfDayLabel.KR)}</div>
+                    <div style="font-size:13px;font-weight:700;color:#4A1B0C;line-height:1.4;word-break:break-word;">"${escHtml(pick.text)}"</div>
+                    <div style="font-size:10px;color:#7D3E2F;margin-top:3px;">${escHtml(pick.name)}</div>
+                </div>
+            `;
             box.classList.remove('hidden');
         }
 
@@ -1441,6 +1611,7 @@
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState !== 'visible') return;
                 renderFoodList();            // 자정이 지나 D-day가 바뀌었을 수 있으니 다시 계산
+                renderMemoryOfTheDay();      // 다시 돌아왔을 때 오늘의 기억도 새로 하나 뽑기
                 checkExpiryNotifications();
             });
         }
@@ -1449,6 +1620,8 @@
         changeLanguage('KR');
         switchSection('all');
         initNotifications();
+        renderMemoryOfTheDay();
+        renderQuickPresets();
     </script>
 </body>
 </html>
