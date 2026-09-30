@@ -103,6 +103,7 @@
             <span class="text-sm font-bold text-slate-500">for FUDI ✨</span>
         </h1>
         <div class="flex items-center gap-1.5 min-w-0">
+            <button id="family-btn" onclick="openFamilyModal()" class="text-base leading-none w-8 h-8 flex-shrink-0 rounded-xl border flex items-center justify-center transition bg-slate-100 border-slate-300" title="Family" aria-label="Family">👨‍👩‍👧</button>
             <button id="noti-bell-btn" onclick="toggleNotifications()" class="text-base leading-none w-8 h-8 flex-shrink-0 rounded-xl border flex items-center justify-center transition bg-slate-100 border-slate-300" title="" aria-label="">🔕</button>
             <span class="text-sm flex-shrink-0">🌐</span>
             <select id="lang-select" onchange="changeLanguage(this.value)" class="text-sm min-w-0 w-[104px] bg-slate-100 font-bold px-2 py-1 rounded-xl border border-slate-300 focus:outline-none text-slate-800">
@@ -179,8 +180,9 @@
 
                 <div class="space-y-2.5">
                     <div id="quick-preset-row" class="hidden"></div>
-                    <div>
-                        <input type="text" id="new-food-name" placeholder="식재료 명칭 (예: 삼겹살, 복숭아)" class="input-styled w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none bg-slate-50 text-slate-900 font-bold transition">
+                    <div class="flex gap-2">
+                        <input type="text" id="new-food-name" placeholder="식재료 명칭 (예: 삼겹살, 복숭아)" class="input-styled flex-1 px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none bg-slate-50 text-slate-900 font-bold transition min-w-0">
+                        <button type="button" onclick="openBarcodeScanner()" id="btn-barcode-scan" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-xl text-lg transition" title="바코드로 스캔">📷</button>
                     </div>
                     
                     <div class="flex gap-2 items-center w-full">
@@ -285,6 +287,23 @@
         </div>
     </div>
 
+    <!-- 📷 바코드 스캐너 -->
+    <div id="barcode-scanner-modal" class="fixed inset-0 bg-slate-900/80 hidden items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-4 shadow-2xl border-2 border-slate-300 space-y-3">
+            <h3 class="text-sm font-black text-slate-900 flex justify-between items-center">
+                <span>📷 바코드 스캔</span>
+                <button onclick="closeBarcodeScanner()" class="text-slate-500 text-xs font-bold px-2 py-1 rounded-lg hover:bg-slate-100">취소</button>
+            </h3>
+            <div class="relative bg-slate-900 rounded-2xl overflow-hidden" style="aspect-ratio:3/4;">
+                <video id="barcode-video" class="w-full h-full object-cover" playsinline muted></video>
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="w-4/5 h-16 border-2 border-emerald-400 rounded-xl"></div>
+                </div>
+            </div>
+            <p id="barcode-status-text" class="text-center text-xs font-bold text-slate-500">바코드를 사각형 안에 맞춰주세요</p>
+        </div>
+    </div>
+
     <!-- 브랜드 스토리 모달 -->
     <div id="brand-story-modal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center p-4 z-50 backdrop-blur-xs">
         <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-2 border-slate-300 text-center space-y-4">
@@ -340,6 +359,16 @@
             <div class="flex gap-2 mt-4">
                 <button onclick="closeMemoryModal()" id="ui-memo-btn-close" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 py-2.5 rounded-xl font-black text-sm transition">닫기</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 👨‍👩‍👧 가족 공유 모달 -->
+    <div id="family-modal" class="fixed inset-0 bg-slate-900/50 hidden items-center justify-center p-4 z-50 backdrop-blur-xs">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border-2 border-slate-300 space-y-4">
+            <div class="w-12 h-12 bg-emerald-50 rounded-2xl mx-auto flex items-center justify-center text-2xl">👨‍👩‍👧</div>
+            <h3 id="fam-title" class="text-base font-black text-slate-900 text-center"></h3>
+            <div id="fam-body" class="space-y-3"></div>
+            <button onclick="closeFamilyModal()" id="fam-close" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 py-2.5 rounded-xl font-black text-sm transition"></button>
         </div>
     </div>
 
@@ -687,6 +716,7 @@
             localStorage.setItem('memoryHistoryKey_iomma_v60', JSON.stringify(memoryHistory));
             localStorage.setItem('customShelves_iomma_v60', JSON.stringify(userShelves));
             syncStateToSW();
+            if (window.iommaFamilyPush) window.iommaFamilyPush();   // 👨‍👩‍👧 가족 공유 중이면 클라우드에도 저장
         }
 
         function getTodayString() {
@@ -1456,6 +1486,83 @@
             box.classList.remove('hidden');
         }
 
+        /* 📷 ==================== 바코드 스캔 ==================== */
+        let barcodeStream = null;
+        let barcodeScanTimer = null;
+
+        function barcodeSupported() {
+            return 'BarcodeDetector' in window && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+        }
+
+        async function openBarcodeScanner() {
+            if (!barcodeSupported()) { showToast('이 기기에서는 바코드 스캔을 쓸 수 없어요. 이름을 입력해 주세요.'); return; }
+
+            const modal = document.getElementById('barcode-scanner-modal');
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            document.getElementById('barcode-status-text').innerText = '바코드를 사각형 안에 맞춰주세요';
+
+            try {
+                barcodeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            } catch (e) {
+                closeBarcodeScanner();
+                showToast('카메라를 쓸 수 없어요. 이름을 직접 입력해 주세요.');
+                return;
+            }
+
+            const video = document.getElementById('barcode-video');
+            video.srcObject = barcodeStream;
+            await video.play();
+
+            const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'qr_code'] });
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            const scanTick = async () => {
+                if (!barcodeStream) return;
+                try {
+                    if (video.videoWidth) {
+                        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                        ctx.drawImage(video, 0, 0);
+                        const codes = await detector.detect(canvas);
+                        if (codes.length) { onBarcodeDetected(codes[0].rawValue); return; }
+                    }
+                } catch (e) { /* 한 프레임 실패는 무시하고 계속 시도 */ }
+                barcodeScanTimer = setTimeout(scanTick, 350);
+            };
+            scanTick();
+        }
+
+        function closeBarcodeScanner() {
+            clearTimeout(barcodeScanTimer); barcodeScanTimer = null;
+            if (barcodeStream) { barcodeStream.getTracks().forEach(t => t.stop()); barcodeStream = null; }
+            const modal = document.getElementById('barcode-scanner-modal');
+            modal.classList.add('hidden'); modal.classList.remove('flex');
+        }
+
+        async function onBarcodeDetected(code) {
+            clearTimeout(barcodeScanTimer); barcodeScanTimer = null;
+            document.getElementById('barcode-status-text').innerText = '상품을 찾는 중...';
+
+            let name = null;
+            try {
+                const res = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json`);
+                const data = await res.json();
+                if (data && data.status === 1 && data.product) {
+                    name = data.product.product_name_ko || data.product.product_name || null;
+                }
+            } catch (e) { /* 네트워크 실패는 조용히 무시하고 수동 입력으로 넘어감 */ }
+
+            closeBarcodeScanner();
+
+            if (name) {
+                document.getElementById('new-food-name').value = name;
+                showToast(`📷 "${name}" 인식됨`);
+            } else {
+                showToast('상품을 못 찾았어요. 이름을 직접 입력해 주세요.');
+            }
+            document.getElementById('new-food-name').focus();
+        }
+
         let toastTimer;
         function showToast(msg) {
             const el = document.getElementById('toast');
@@ -1612,6 +1719,251 @@
         initNotifications();
         renderMemoryOfTheDay();
         renderQuickPresets();
+
+        /* 👨‍👩‍👧 [가족 공유 — 다국어 문구] 실제 동기화는 아래 type="module" 스크립트(Firebase)가 담당 */
+        const famI18n = {
+            KR: { btnTitle: "가족 공유", title: "가족과 냉장고 함께 쓰기", descOff: "가족 코드를 만들어 가족에게 알려주면, 같은 냉장고를 함께 보고 고칠 수 있어요.", createBtn: "새 가족 코드 만들기", or: "또는 받은 코드로 참여하기", placeholder: "가족 코드 8자리", joinBtn: "참여하기", descOn: "가족과 냉장고를 함께 쓰고 있어요. 아래 코드를 가족에게 알려주세요.", copyBtn: "복사", shareBtn: "공유", leaveBtn: "가족 공유 그만하기", closeBtn: "닫기", joinConfirm: "참여하면 이 휴대폰의 냉장고 내용이 가족 냉장고 내용으로 바뀌어요. 계속할까요?", leaveConfirm: "가족 공유를 그만할까요? 지금 내용은 이 휴대폰에 그대로 남아요.", badCode: "가족 코드 8자리를 정확히 입력해 주세요.", notFound: "그런 가족 코드가 없어요. 다시 확인해 주세요.", created: "👨‍👩‍👧 가족 코드가 만들어졌어요!", joined: "👨‍👩‍👧 가족 냉장고에 참여했어요!", left: "가족 공유를 그만했어요.", copied: "코드를 복사했어요.", shareText: "iomma 가족 냉장고에 함께해요! 가족 코드: {code}", netError: "인터넷 연결을 확인하고 다시 시도해 주세요.", busy: "잠시만요..." },
+            EN: { btnTitle: "Family sharing", title: "Share the fridge with family", descOff: "Create a family code and share it so everyone can see and edit the same fridge.", createBtn: "Create a new family code", or: "or join with a code you received", placeholder: "8-character family code", joinBtn: "Join", descOn: "You're sharing this fridge with your family. Give them the code below.", copyBtn: "Copy", shareBtn: "Share", leaveBtn: "Stop family sharing", closeBtn: "Close", joinConfirm: "Joining will replace this phone's fridge contents with the family fridge. Continue?", leaveConfirm: "Stop family sharing? Current contents stay on this phone.", badCode: "Please enter the full 8-character family code.", notFound: "That family code doesn't exist. Please check it.", created: "👨‍👩‍👧 Family code created!", joined: "👨‍👩‍👧 You joined the family fridge!", left: "Family sharing stopped.", copied: "Code copied.", shareText: "Join our iomma family fridge! Family code: {code}", netError: "Please check your internet connection and try again.", busy: "One moment..." },
+            ES: { btnTitle: "Compartir en familia", title: "Compartir la nevera en familia", descOff: "Crea un código familiar y compártelo para ver y editar la misma nevera.", createBtn: "Crear código familiar", or: "o únete con un código recibido", placeholder: "Código de 8 caracteres", joinBtn: "Unirse", descOn: "Estás compartiendo la nevera con tu familia. Comparte este código.", copyBtn: "Copiar", shareBtn: "Compartir", leaveBtn: "Dejar de compartir", closeBtn: "Cerrar", joinConfirm: "Al unirte, el contenido de este teléfono se reemplazará por la nevera familiar. ¿Continuar?", leaveConfirm: "¿Dejar de compartir? El contenido actual se queda en este teléfono.", badCode: "Introduce el código completo de 8 caracteres.", notFound: "Ese código no existe. Revísalo.", created: "👨‍👩‍👧 ¡Código familiar creado!", joined: "👨‍👩‍👧 ¡Te uniste a la nevera familiar!", left: "Has dejado de compartir.", copied: "Código copiado.", shareText: "¡Únete a nuestra nevera familiar en iomma! Código: {code}", netError: "Revisa tu conexión a internet e inténtalo de nuevo.", busy: "Un momento..." },
+            ZH: { btnTitle: "家庭共享", title: "与家人共用冰箱", descOff: "创建家庭码并告诉家人，大家就能一起查看和编辑同一个冰箱。", createBtn: "创建新的家庭码", or: "或使用收到的家庭码加入", placeholder: "8位家庭码", joinBtn: "加入", descOn: "正在与家人共用冰箱。请把下面的家庭码告诉家人。", copyBtn: "复制", shareBtn: "分享", leaveBtn: "停止家庭共享", closeBtn: "关闭", joinConfirm: "加入后，本手机的冰箱内容将替换为家庭冰箱内容。继续吗？", leaveConfirm: "停止家庭共享吗？当前内容会保留在本手机上。", badCode: "请输入完整的8位家庭码。", notFound: "该家庭码不存在，请重新确认。", created: "👨‍👩‍👧 家庭码已创建！", joined: "👨‍👩‍👧 已加入家庭冰箱！", left: "已停止家庭共享。", copied: "已复制家庭码。", shareText: "一起使用 iomma 家庭冰箱吧！家庭码：{code}", netError: "请检查网络连接后重试。", busy: "请稍候..." },
+            TH: { btnTitle: "แชร์กับครอบครัว", title: "ใช้ตู้เย็นร่วมกับครอบครัว", descOff: "สร้างรหัสครอบครัวแล้วแชร์ ทุกคนจะดูและแก้ไขตู้เย็นเดียวกันได้", createBtn: "สร้างรหัสครอบครัวใหม่", or: "หรือเข้าร่วมด้วยรหัสที่ได้รับ", placeholder: "รหัสครอบครัว 8 ตัว", joinBtn: "เข้าร่วม", descOn: "กำลังใช้ตู้เย็นร่วมกับครอบครัว ส่งรหัสด้านล่างให้ครอบครัว", copyBtn: "คัดลอก", shareBtn: "แชร์", leaveBtn: "เลิกแชร์กับครอบครัว", closeBtn: "ปิด", joinConfirm: "เมื่อเข้าร่วม ข้อมูลตู้เย็นในเครื่องนี้จะถูกแทนที่ด้วยตู้เย็นครอบครัว ดำเนินการต่อ?", leaveConfirm: "เลิกแชร์กับครอบครัว? ข้อมูลปัจจุบันจะยังอยู่ในเครื่องนี้", badCode: "กรุณาใส่รหัสครอบครัวให้ครบ 8 ตัว", notFound: "ไม่พบรหัสครอบครัวนี้ กรุณาตรวจสอบอีกครั้ง", created: "👨‍👩‍👧 สร้างรหัสครอบครัวแล้ว!", joined: "👨‍👩‍👧 เข้าร่วมตู้เย็นครอบครัวแล้ว!", left: "เลิกแชร์กับครอบครัวแล้ว", copied: "คัดลอกรหัสแล้ว", shareText: "มาใช้ตู้เย็นครอบครัว iomma ด้วยกัน! รหัส: {code}", netError: "กรุณาตรวจสอบอินเทอร์เน็ตแล้วลองใหม่", busy: "สักครู่..." },
+            FR: { btnTitle: "Partage familial", title: "Partager le frigo en famille", descOff: "Créez un code famille et partagez-le pour voir et modifier le même frigo.", createBtn: "Créer un code famille", or: "ou rejoindre avec un code reçu", placeholder: "Code famille à 8 caractères", joinBtn: "Rejoindre", descOn: "Vous partagez ce frigo en famille. Donnez-leur le code ci-dessous.", copyBtn: "Copier", shareBtn: "Partager", leaveBtn: "Arrêter le partage", closeBtn: "Fermer", joinConfirm: "En rejoignant, le contenu de ce téléphone sera remplacé par le frigo familial. Continuer ?", leaveConfirm: "Arrêter le partage ? Le contenu actuel reste sur ce téléphone.", badCode: "Saisissez le code complet à 8 caractères.", notFound: "Ce code n'existe pas. Vérifiez-le.", created: "👨‍👩‍👧 Code famille créé !", joined: "👨‍👩‍👧 Vous avez rejoint le frigo familial !", left: "Partage familial arrêté.", copied: "Code copié.", shareText: "Rejoins notre frigo familial iomma ! Code : {code}", netError: "Vérifiez votre connexion internet et réessayez.", busy: "Un instant..." },
+            JP: { btnTitle: "家族で共有", title: "家族と冷蔵庫を共有", descOff: "家族コードを作って家族に伝えると、同じ冷蔵庫を一緒に見て編集できます。", createBtn: "新しい家族コードを作成", or: "または受け取ったコードで参加", placeholder: "家族コード8文字", joinBtn: "参加する", descOn: "家族と冷蔵庫を共有中です。下のコードを家族に伝えてください。", copyBtn: "コピー", shareBtn: "共有", leaveBtn: "家族共有をやめる", closeBtn: "閉じる", joinConfirm: "参加すると、この端末の冷蔵庫の内容が家族の冷蔵庫に置き換わります。続けますか？", leaveConfirm: "家族共有をやめますか？今の内容はこの端末に残ります。", badCode: "家族コード8文字を正しく入力してください。", notFound: "その家族コードは見つかりません。もう一度確認してください。", created: "👨‍👩‍👧 家族コードを作成しました！", joined: "👨‍👩‍👧 家族の冷蔵庫に参加しました！", left: "家族共有をやめました。", copied: "コードをコピーしました。", shareText: "iomma の家族冷蔵庫に参加しよう！家族コード：{code}", netError: "インターネット接続を確認して、もう一度お試しください。", busy: "少々お待ちください..." },
+            DE: { btnTitle: "Familienfreigabe", title: "Kühlschrank mit der Familie teilen", descOff: "Erstelle einen Familiencode und teile ihn, damit alle denselben Kühlschrank sehen und bearbeiten können.", createBtn: "Neuen Familiencode erstellen", or: "oder mit erhaltenem Code beitreten", placeholder: "8-stelliger Familiencode", joinBtn: "Beitreten", descOn: "Du teilst diesen Kühlschrank mit deiner Familie. Gib ihnen den Code unten.", copyBtn: "Kopieren", shareBtn: "Teilen", leaveBtn: "Familienfreigabe beenden", closeBtn: "Schließen", joinConfirm: "Beim Beitreten wird der Inhalt dieses Telefons durch den Familienkühlschrank ersetzt. Fortfahren?", leaveConfirm: "Familienfreigabe beenden? Der aktuelle Inhalt bleibt auf diesem Telefon.", badCode: "Bitte den vollständigen 8-stelligen Code eingeben.", notFound: "Diesen Familiencode gibt es nicht. Bitte prüfen.", created: "👨‍👩‍👧 Familiencode erstellt!", joined: "👨‍👩‍👧 Du bist dem Familienkühlschrank beigetreten!", left: "Familienfreigabe beendet.", copied: "Code kopiert.", shareText: "Komm in unseren iomma-Familienkühlschrank! Code: {code}", netError: "Bitte Internetverbindung prüfen und erneut versuchen.", busy: "Einen Moment..." },
+            RU: { btnTitle: "Семейный доступ", title: "Общий холодильник с семьёй", descOff: "Создайте семейный код и поделитесь им — все смогут видеть и изменять один холодильник.", createBtn: "Создать семейный код", or: "или присоединиться по полученному коду", placeholder: "Семейный код из 8 символов", joinBtn: "Присоединиться", descOn: "Вы делите холодильник с семьёй. Передайте им код ниже.", copyBtn: "Копировать", shareBtn: "Поделиться", leaveBtn: "Прекратить семейный доступ", closeBtn: "Закрыть", joinConfirm: "При присоединении содержимое этого телефона заменится семейным холодильником. Продолжить?", leaveConfirm: "Прекратить семейный доступ? Текущие данные останутся на этом телефоне.", badCode: "Введите полный код из 8 символов.", notFound: "Такого семейного кода нет. Проверьте его.", created: "👨‍👩‍👧 Семейный код создан!", joined: "👨‍👩‍👧 Вы присоединились к семейному холодильнику!", left: "Семейный доступ прекращён.", copied: "Код скопирован.", shareText: "Присоединяйся к нашему семейному холодильнику iomma! Код: {code}", netError: "Проверьте подключение к интернету и попробуйте снова.", busy: "Минутку..." },
+            VI: { btnTitle: "Chia sẻ gia đình", title: "Dùng chung tủ lạnh với gia đình", descOff: "Tạo mã gia đình và chia sẻ để cả nhà cùng xem và sửa một tủ lạnh.", createBtn: "Tạo mã gia đình mới", or: "hoặc tham gia bằng mã nhận được", placeholder: "Mã gia đình 8 ký tự", joinBtn: "Tham gia", descOn: "Bạn đang dùng chung tủ lạnh với gia đình. Hãy gửi mã dưới đây cho cả nhà.", copyBtn: "Sao chép", shareBtn: "Chia sẻ", leaveBtn: "Ngừng chia sẻ gia đình", closeBtn: "Đóng", joinConfirm: "Khi tham gia, nội dung tủ lạnh trên máy này sẽ được thay bằng tủ lạnh gia đình. Tiếp tục?", leaveConfirm: "Ngừng chia sẻ gia đình? Nội dung hiện tại vẫn được giữ trên máy này.", badCode: "Vui lòng nhập đủ mã gia đình 8 ký tự.", notFound: "Không tìm thấy mã gia đình này. Vui lòng kiểm tra lại.", created: "👨‍👩‍👧 Đã tạo mã gia đình!", joined: "👨‍👩‍👧 Đã tham gia tủ lạnh gia đình!", left: "Đã ngừng chia sẻ gia đình.", copied: "Đã sao chép mã.", shareText: "Cùng dùng tủ lạnh gia đình iomma nhé! Mã: {code}", netError: "Vui lòng kiểm tra kết nối mạng rồi thử lại.", busy: "Chờ một chút..." },
+            ID: { btnTitle: "Berbagi keluarga", title: "Berbagi kulkas dengan keluarga", descOff: "Buat kode keluarga dan bagikan agar semua bisa melihat dan mengubah kulkas yang sama.", createBtn: "Buat kode keluarga baru", or: "atau bergabung dengan kode yang diterima", placeholder: "Kode keluarga 8 karakter", joinBtn: "Gabung", descOn: "Kamu sedang berbagi kulkas dengan keluarga. Berikan kode di bawah ini.", copyBtn: "Salin", shareBtn: "Bagikan", leaveBtn: "Berhenti berbagi", closeBtn: "Tutup", joinConfirm: "Jika bergabung, isi kulkas di ponsel ini akan diganti dengan kulkas keluarga. Lanjutkan?", leaveConfirm: "Berhenti berbagi keluarga? Isi saat ini tetap ada di ponsel ini.", badCode: "Masukkan kode keluarga 8 karakter dengan lengkap.", notFound: "Kode keluarga tidak ditemukan. Periksa kembali.", created: "👨‍👩‍👧 Kode keluarga dibuat!", joined: "👨‍👩‍👧 Kamu bergabung ke kulkas keluarga!", left: "Berbagi keluarga dihentikan.", copied: "Kode disalin.", shareText: "Ayo gabung ke kulkas keluarga iomma! Kode: {code}", netError: "Periksa koneksi internet lalu coba lagi.", busy: "Tunggu sebentar..." }
+        };
+        function famT() { return famI18n[currentLang] || famI18n.EN; }
+
+        function openFamilyModal() {
+            // Firebase 모듈이 아직 못 불러와졌으면(인터넷 끊김 등) 안내만
+            if (!window.iommaFamilyRender) { showToast(famT().netError); return; }
+            window.iommaFamilyRender();
+            const m = document.getElementById('family-modal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+        function closeFamilyModal() {
+            const m = document.getElementById('family-modal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+        }
     </script>
+
+    <!-- 👨‍👩‍👧 [가족 공유 — Firebase Firestore 동기화] -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD2ac0WN7FiFuMD2Mo8WijYZDqE0AMB3sg",
+            authDomain: "iomma-family.firebaseapp.com",
+            projectId: "iomma-family",
+            storageBucket: "iomma-family.firebasestorage.app",
+            messagingSenderId: "431818435692",
+            appId: "1:431818435692:web:8d6eb9db2ebb75528f3c49"
+        };
+        const fbApp = initializeApp(firebaseConfig);
+        const db = getFirestore(fbApp);
+
+        const FAMILY_KEY = 'iomma_family_code_v1';
+        const DEVICE_KEY = 'iomma_device_id_v1';
+        const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // 헷갈리는 글자(0,O,1,I,L) 제외
+
+        let deviceId = localStorage.getItem(DEVICE_KEY);
+        if (!deviceId) { deviceId = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem(DEVICE_KEY, deviceId); }
+
+        let familyCode = localStorage.getItem(FAMILY_KEY) || '';
+        let unsubscribe = null;
+        let applyingRemote = false;
+        let pushTimer = null;
+        let busy = false;
+
+        const famRef = (code) => doc(db, 'families', code);
+        const fmtCode = (c) => c.slice(0, 4) + '-' + c.slice(4);
+        const normCode = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        function makeCode() {
+            const arr = new Uint32Array(8); crypto.getRandomValues(arr);
+            return Array.from(arr, n => CODE_CHARS[n % CODE_CHARS.length]).join('');
+        }
+
+        // 음식 이름에 특수문자가 있어도 안전하도록 통째로 JSON 문자열로 저장
+        function payload() {
+            return {
+                fridgeJson: JSON.stringify(fridgeData),
+                historyJson: JSON.stringify(memoryHistory),
+                shelvesJson: JSON.stringify(userShelves),
+                updatedBy: deviceId,
+                updatedAt: serverTimestamp(),
+                v: 1
+            };
+        }
+
+        async function pushNow() {
+            pushTimer = null;
+            if (!familyCode) return;
+            await setDoc(famRef(familyCode), payload());
+        }
+
+        // saveToLocalStorage()가 부를 때마다 0.4초 모아서 한 번에 업로드
+        window.iommaFamilyPush = function () {
+            if (!familyCode || applyingRemote) return;
+            clearTimeout(pushTimer);
+            pushTimer = setTimeout(() => { pushNow().catch(e => console.warn('family push', e)); }, 400);
+        };
+
+        function refreshUI() {
+            try { updateSummaryCounts(); switchSection(currentSection); renderMemoryOfTheDay(); } catch (e) { console.warn(e); }
+        }
+
+        function applyRemote(d) {
+            try {
+                const f = JSON.parse(d.fridgeJson || 'null');
+                const h = JSON.parse(d.historyJson || 'null');
+                const s = JSON.parse(d.shelvesJson || 'null');
+                if (!f || typeof f !== 'object') return;
+                ['freezer', 'fridge', 'vegetable', 'beverage'].forEach(k => { if (!Array.isArray(f[k])) f[k] = []; });
+                fridgeData = f;
+                memoryHistory = (h && typeof h === 'object') ? h : {};
+                if (s && typeof s === 'object') userShelves = s;
+                applyingRemote = true;
+                saveToLocalStorage();          // 이 휴대폰에도 저장 (다시 업로드는 안 함)
+            } catch (e) { console.warn('family apply', e); }
+            finally { applyingRemote = false; }
+            refreshUI();
+        }
+
+        function stopListening() { if (unsubscribe) { unsubscribe(); unsubscribe = null; } }
+        function startListening() {
+            stopListening();
+            if (!familyCode) return;
+            unsubscribe = onSnapshot(famRef(familyCode), snap => {
+                if (snap.metadata.hasPendingWrites || !snap.exists()) return;
+                const d = snap.data();
+                if (d.updatedBy === deviceId) return;   // 내가 올린 건 무시
+                if (pushTimer) return;                  // 방금 내가 고친 게 곧 올라갈 예정이면 그걸 우선
+                applyRemote(d);
+            }, err => console.warn('family listen', err));
+        }
+
+        function updateFamilyBtn() {
+            const b = document.getElementById('family-btn');
+            if (!b) return;
+            const on = !!familyCode;
+            b.className = 'text-base leading-none w-8 h-8 flex-shrink-0 rounded-xl border flex items-center justify-center transition ' +
+                (on ? 'bg-emerald-50 border-emerald-400' : 'bg-slate-100 border-slate-300');
+            b.title = famT().btnTitle; b.setAttribute('aria-label', famT().btnTitle);
+        }
+
+        function setBusy(v) {
+            busy = v;
+            document.querySelectorAll('#fam-body button').forEach(el => { el.disabled = v; el.style.opacity = v ? '0.6' : ''; });
+        }
+
+        window.iommaFamilyRender = function () {
+            const t = famT();
+            document.getElementById('fam-title').innerText = t.title;
+            document.getElementById('fam-close').innerText = t.closeBtn;
+            const body = document.getElementById('fam-body');
+            if (familyCode) {
+                body.innerHTML = `
+                    <p class="text-sm text-slate-700 font-bold text-center leading-relaxed"></p>
+                    <div class="bg-emerald-50 border-2 border-emerald-300 rounded-2xl py-3 text-center">
+                        <div class="text-2xl font-black tracking-[0.2em] text-emerald-800 select-all">${fmtCode(familyCode)}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="famCopy()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 py-2.5 rounded-xl font-black text-sm transition">📋 ${t.copyBtn}</button>
+                        <button onclick="famShare()" class="flex-1 naver-green-bg text-white py-2.5 rounded-xl font-black text-sm transition">📤 ${t.shareBtn}</button>
+                    </div>
+                    <button onclick="famLeave()" class="w-full text-red-600 text-[13px] font-bold py-1 underline">${t.leaveBtn}</button>`;
+                body.querySelector('p').innerText = t.descOn;
+            } else {
+                body.innerHTML = `
+                    <p class="text-sm text-slate-700 font-bold text-center leading-relaxed"></p>
+                    <button onclick="famCreate()" class="w-full naver-green-bg text-white py-2.5 rounded-xl font-black text-sm transition shadow-xs">✨ ${t.createBtn}</button>
+                    <div class="text-center text-[13px] text-slate-500 font-bold pt-1">${t.or}</div>
+                    <div class="flex gap-2">
+                        <input id="fam-join-input" type="text" maxlength="9" autocomplete="off" autocapitalize="characters"
+                               class="flex-1 min-w-0 bg-slate-50 border-2 border-slate-300 rounded-xl px-3 py-2 text-sm font-black tracking-widest uppercase focus:outline-none focus:border-emerald-500 select-text" placeholder="${t.placeholder}">
+                        <button onclick="famJoin()" class="bg-slate-800 text-white px-4 rounded-xl font-black text-sm flex-shrink-0">${t.joinBtn}</button>
+                    </div>`;
+                body.querySelector('p').innerText = t.descOff;
+            }
+            updateFamilyBtn();
+        };
+
+        window.famCreate = async function () {
+            if (busy) return;
+            setBusy(true);
+            try {
+                let code = makeCode();
+                for (let i = 0; i < 5; i++) {               // 혹시 겹치는 코드가 있으면 다시 뽑기
+                    if (!(await getDoc(famRef(code))).exists()) break;
+                    code = makeCode();
+                }
+                familyCode = code;
+                await pushNow();                            // 지금 이 휴대폰 냉장고 내용을 가족 냉장고로 올림
+                localStorage.setItem(FAMILY_KEY, code);
+                startListening();
+                showToast(famT().created);
+            } catch (e) {
+                console.warn(e); familyCode = ''; showToast(famT().netError);
+            } finally { setBusy(false); window.iommaFamilyRender(); }
+        };
+
+        window.famJoin = async function () {
+            if (busy) return;
+            const t = famT();
+            const code = normCode(document.getElementById('fam-join-input').value);
+            if (code.length !== 8) { showToast(t.badCode); return; }
+            setBusy(true);
+            try {
+                const snap = await getDoc(famRef(code));
+                if (!snap.exists()) { showToast(t.notFound); return; }
+                if (!confirm(t.joinConfirm)) return;
+                familyCode = code;
+                localStorage.setItem(FAMILY_KEY, code);
+                applyRemote(snap.data());
+                startListening();
+                showToast(t.joined);
+                window.iommaFamilyRender();
+                closeFamilyModal();
+            } catch (e) {
+                console.warn(e); showToast(t.netError);
+            } finally { setBusy(false); }
+        };
+
+        window.famLeave = function () {
+            const t = famT();
+            if (!confirm(t.leaveConfirm)) return;
+            stopListening();
+            clearTimeout(pushTimer); pushTimer = null;
+            familyCode = '';
+            localStorage.removeItem(FAMILY_KEY);
+            showToast(t.left);
+            window.iommaFamilyRender();
+        };
+
+        window.famCopy = async function () {
+            const text = fmtCode(familyCode);
+            try { await navigator.clipboard.writeText(text); showToast(famT().copied); }
+            catch (e) { prompt('', text); }
+        };
+
+        window.famShare = async function () {
+            const text = famT().shareText.replace('{code}', fmtCode(familyCode));
+            if (navigator.share) {
+                try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
+            }
+            try { await navigator.clipboard.writeText(text); showToast(famT().copied); } catch (e) { prompt('', text); }
+        };
+
+        // 언어를 바꾸면 버튼 설명도 바꾸기
+        document.getElementById('lang-select').addEventListener('change', updateFamilyBtn);
+
+        // 앱을 켤 때 이미 가족 공유 중이면 바로 연결
+        updateFamilyBtn();
+        if (familyCode) startListening();
+    </script>
+
 </body>
 </html>
