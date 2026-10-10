@@ -1957,7 +1957,7 @@
         };
 
         window.famShare = async function () {
-            const text = famT().shareText.replace('{code}', fmtCode(familyCode));
+            const text = famT().shareText.replace('{code}', fmtCode(familyCode)) + '\n\n📲 https://play.google.com/store/apps/details?id=io.github.lot5665_lang.twa';
             if (navigator.share) {
                 try { await navigator.share({ text }); return; } catch (e) { if (e && e.name === 'AbortError') return; }
             }
