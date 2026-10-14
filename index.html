@@ -758,6 +758,7 @@
         /* 🎯 [언어 변환 실행 함수] */
         function changeLanguage(lang) {
             currentLang = lang;
+            try { localStorage.setItem('iomma_lang_v1', lang); } catch (e) {}
             const t = i18n[lang] || i18n['KR'];
 
             document.documentElement.lang = langMap[lang] || "ko";
@@ -1725,8 +1726,15 @@
             });
         }
 
-        /* 초기 언어 설정 적용 */
-        changeLanguage('KR');
+        /* 초기 언어 설정 적용: 한 번 고른 언어를 기억하고, 처음이면 휴대폰 언어를 따라감 */
+        function detectStartLang() {
+            try { const saved = localStorage.getItem('iomma_lang_v1'); if (saved && i18n[saved]) return saved; } catch (e) {}
+            const map = { ko: 'KR', en: 'EN', es: 'ES', zh: 'ZH', th: 'TH', fr: 'FR', ja: 'JP', de: 'DE', ru: 'RU', vi: 'VI', id: 'ID', in: 'ID' };
+            const list = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || 'ko'];
+            for (const l of list) { const c = map[String(l).toLowerCase().split('-')[0]]; if (c && i18n[c]) return c; }
+            return 'EN';
+        }
+        changeLanguage(detectStartLang());
         switchSection('all');
         initNotifications();
         renderMemoryOfTheDay();
